@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       String @id @default(uuid())
+  name     String
+  email    String @unique
+  password String
+
+  @@map("users")
+}
+
+model Book {
+  id                 String    @id @default(uuid())
+  name               String
+  editionNumber      Int       @map("edition_number")
+  editionDescription String    @map("edition_description")
+  editionYear        Int       @map("edition_year")
+  quantity           Int
+  pages              Int
+  available          Int
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime? @updatedAt @map("updated_at")
+  publisherId        String    @map("publisher_id")
+
+  publisher Publisher     @relation(fields: [publisherId], references: [id])
+  authors   BookAuthors[]
+
+  @@map("books")
+}
+
+model Author {
+  id        String        @id @default(uuid())
+  name      String
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime?     @updatedAt @map("updated_at")
+  books     BookAuthors[]
+
+  @@map("authors")
+}
+
+model BookAuthors {
+  bookId   String @map("book_id")
+  authorId String @map("author_id")
+
+  book   Book   @relation(fields: [bookId], references: [id])
+  author Author @relation(fields: [authorId], references: [id])
+
+  @@id([bookId, authorId])
+  @@map("book_authors")
+}
+
+model Publisher {
+  id        String    @id @default(uuid())
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  books Book[]
+
+  @@map("publishers")
+}
