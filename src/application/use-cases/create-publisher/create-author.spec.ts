@@ -1,4 +1,4 @@
-import { CreateAuthorUseCase } from './create-author';
+import { CreatePublisherUseCase } from './create-publisher';
 
 const MockRepository = () => {
     return {
@@ -10,12 +10,14 @@ const MockRepository = () => {
     };
 };
 
-describe('[UT] - Create author use case', () => {
-    it('should create an author', async () => {
-        const authorRepository = MockRepository();
-        const createAuthorUseCase = new CreateAuthorUseCase(authorRepository);
+describe('[UT] - Create publisher use case', () => {
+    it('should create a publisher', async () => {
+        const publisherRepository = MockRepository();
+        const createPublisherUseCase = new CreatePublisherUseCase(
+            publisherRepository,
+        );
 
-        const result = await createAuthorUseCase.execute({
+        const result = await createPublisherUseCase.execute({
             name: 'Name 1',
         });
 

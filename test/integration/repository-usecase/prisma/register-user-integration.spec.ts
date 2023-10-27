@@ -1,6 +1,5 @@
 import { FakeHasher } from 'test/cryptography/fake-hasher';
 import { UserAlreadyExistsError } from '@usecase/@errors/user-already-exists-error';
-import { User } from '@domain/entities/user';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { RegisterUserUseCase } from '@usecase/register-user/register-user';
 import {
@@ -58,19 +57,17 @@ describe('[IT] - Register user', () => {
             fakeHasher,
         );
 
-        const user = new User({
+        const user = {
             name: 'Name 1',
             email: 'email@email.com',
-            password: '123456',
+            password: await fakeHasher.hash('123456'),
+        };
+
+        await prisma.user.create({
+            data: user,
         });
 
-        await usersRepository.create(user);
-
-        const result = await registerUserUseCase.execute({
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: '123456',
-        });
+        const result = await registerUserUseCase.execute(user);
 
         expect(result.isLeft()).toBe(true);
         expect(result.value).toBeInstanceOf(UserAlreadyExistsError);

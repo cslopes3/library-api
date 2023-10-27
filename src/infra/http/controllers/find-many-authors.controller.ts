@@ -1,7 +1,7 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { ZodValidationPipe } from '@infra/http/pipes/zod-validation-pipe';
 import { z } from 'zod';
-import { FindManyAuthorsUseCase } from '@usecase/find-many-author.ts/find-many-authors';
+import { FindManyAuthorsUseCase } from '@usecase/find-many-author/find-many-authors';
 
 const pageQueryParamSchema = z
     .string()

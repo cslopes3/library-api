@@ -54,9 +54,28 @@ describe('[UT] - Authors repository', () => {
         expect(result![1].name).toEqual('Name 2');
     });
 
-    it('should return an empty array when not found an author', async () => {
+    it('should return an empty array when not found an author at findMany', async () => {
         const result = await authorsRepository.findMany({ page: 1 });
 
         expect(result).toHaveLength(0);
+    });
+
+    it('should find an author', async () => {
+        await prisma.author.create({
+            data: {
+                id: '1',
+                name: 'Name 1',
+            },
+        });
+
+        const result = await authorsRepository.findById('1');
+
+        expect(result?.name).toEqual('Name 1');
+    });
+
+    it('should return null when not found an author', async () => {
+        const result = await authorsRepository.findById('1');
+
+        expect(result).toBeNull();
     });
 });

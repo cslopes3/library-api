@@ -1,6 +1,5 @@
 import { FakeEncrypter } from 'test/cryptography/fake-encrypter';
 import { FakeHasher } from 'test/cryptography/fake-hasher';
-import { User } from '@domain/entities/user';
 import { WrongCredentialsError } from '@usecase/@errors/wrong-credentials-error';
 import { AuthenticateUserUseCase } from '@usecase/authenticate-user/authenticate-user';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
@@ -35,13 +34,13 @@ describe('[IT] - Authenticate User', () => {
     });
 
     it('should authenticate a user', async () => {
-        const user = new User({
-            name: 'John Doe',
-            email: 'johndoe@example.com',
-            password: await fakeHasher.hash('123456'),
+        await prisma.user.create({
+            data: {
+                name: 'John Doe',
+                email: 'johndoe@example.com',
+                password: await fakeHasher.hash('123456'),
+            },
         });
-
-        await usersRepository.create(user);
 
         const result = await authenticateUserUseCase.execute({
             email: 'johndoe@example.com',
@@ -65,13 +64,13 @@ describe('[IT] - Authenticate User', () => {
     });
 
     it('should return a message error when provide wrong password', async () => {
-        const user = new User({
-            name: 'John Doe',
-            email: 'johndoe@example.com',
-            password: await fakeHasher.hash('123456'),
+        await prisma.user.create({
+            data: {
+                name: 'John Doe',
+                email: 'johndoe@example.com',
+                password: await fakeHasher.hash('123456'),
+            },
         });
-
-        await usersRepository.create(user);
 
         const result = await authenticateUserUseCase.execute({
             email: 'johndoe@example.com',

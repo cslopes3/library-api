@@ -24,4 +24,8 @@ export class Entity<Props> {
     get updatedAt(): Date {
         return this._updatedAt;
     }
+
+    protected touch() {
+        this._updatedAt = new Date();
+    }
 }

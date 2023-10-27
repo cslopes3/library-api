@@ -1,10 +1,10 @@
 import { Entity } from '@shared/entities/base-entity';
 
-interface AuthorProps {
+interface PublisherProps {
     name: string;
 }
 
-export class Author extends Entity<AuthorProps> {
+export class Publisher extends Entity<PublisherProps> {
     get name(): string {
         return this.props.name;
     }
