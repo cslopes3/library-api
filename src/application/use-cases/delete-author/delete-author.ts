@@ -15,6 +15,8 @@ export class DeleteAuthorUseCase {
             return left(new ResourceNotFoundError());
         }
 
+        await this.authorsRepository.delete(id);
+
         return right(null);
     }
 }

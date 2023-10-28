@@ -34,7 +34,7 @@ export class UpdateAuthorUseCase {
 
         author.changeName(name);
 
-        this.authorsRepository.update(author);
+        await this.authorsRepository.update(author);
 
         return right({
             id: author.id.toString(),
