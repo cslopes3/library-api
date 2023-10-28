@@ -37,7 +37,7 @@ export class UpdatePublisherUseCase {
 
         publisher.changeName(name);
 
-        this.publishersRepository.update(publisher);
+        await this.publishersRepository.update(publisher);
 
         return right({
             id: publisher.id.toString(),

@@ -15,6 +15,8 @@ export class DeletePublisherUseCase {
             return left(new ResourceNotFoundError());
         }
 
+        await this.publishersRepository.delete(id);
+
         return right(null);
     }
 }
