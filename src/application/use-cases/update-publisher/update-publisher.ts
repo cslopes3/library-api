@@ -5,6 +5,7 @@ import {
 } from './update-publisher-dto';
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
+import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
 
 export class UpdatePublisherUseCase {
     constructor(private publishersRepository: PublishersRepository) {}
@@ -13,12 +14,25 @@ export class UpdatePublisherUseCase {
         id,
         name,
     }: UpdatePublisherInputDto): Promise<
-        Either<ResourceNotFoundError, UpdatePublisherOutputDto | null>
+        Either<
+            ResourceNotFoundError | PublisherAlreadyExistsError,
+            UpdatePublisherOutputDto | null
+        >
     > {
         const publisher = await this.publishersRepository.findById(id);
 
         if (!publisher) {
             return left(new ResourceNotFoundError());
+        }
+
+        const publisherWithSameName =
+            await this.publishersRepository.findByName(name);
+
+        if (
+            publisherWithSameName &&
+            publisherWithSameName.id !== publisher.id
+        ) {
+            return left(new PublisherAlreadyExistsError(name));
         }
 
         publisher.changeName(name);

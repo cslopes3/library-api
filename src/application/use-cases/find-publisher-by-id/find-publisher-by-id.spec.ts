@@ -4,6 +4,7 @@ import { FindPublisherByIdUseCase } from './find-publisher-by-id';
 const MockRepository = () => {
     return {
         findById: vi.fn(),
+        findByName: vi.fn(),
         findMany: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),

@@ -10,6 +10,7 @@ publisher.push(new Publisher({ name: 'Name 3' }, '3', new Date(2023, 0, 20)));
 const MockRepository = () => {
     return {
         findById: vi.fn(),
+        findByName: vi.fn(),
         findMany: vi.fn().mockReturnValue(Promise.resolve(publisher)),
         create: vi.fn(),
         update: vi.fn(),

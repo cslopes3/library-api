@@ -5,7 +5,8 @@ import {
     CreatePublisherInputDto,
     CreatePublisherOutputDto,
 } from './create-publisher-dto';
-import { Either, right } from '@shared/errors/either';
+import { Either, left, right } from '@shared/errors/either';
+import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
 
 @Injectable()
 export class CreatePublisherUseCase {
@@ -14,8 +15,15 @@ export class CreatePublisherUseCase {
     async execute({
         name,
     }: CreatePublisherInputDto): Promise<
-        Either<null, CreatePublisherOutputDto>
+        Either<PublisherAlreadyExistsError, CreatePublisherOutputDto>
     > {
+        const publisherWithSameName =
+            await this.publishersRepository.findByName(name);
+
+        if (publisherWithSameName) {
+            return left(new PublisherAlreadyExistsError(name));
+        }
+
         const publisher = new Publisher({ name });
 
         await this.publishersRepository.create(publisher);

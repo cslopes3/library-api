@@ -1,6 +1,7 @@
 import { Publisher } from '@domain/entities/publisher';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { UpdatePublisherUseCase } from './update-publisher';
+import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
 
 const publisher = new Publisher(
     {
@@ -12,6 +13,7 @@ const publisher = new Publisher(
 const MockRepository = () => {
     return {
         findById: vi.fn().mockReturnValue(Promise.resolve(publisher)),
+        findByName: vi.fn(),
         findMany: vi.fn(),
         create: vi.fn(),
         update: vi.fn().mockReturnValue(Promise.resolve(publisher)),
@@ -55,5 +57,31 @@ describe('[UT] - Update publisher use case', () => {
 
         expect(result.isLeft()).toBe(true);
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
+    });
+
+    it('should return a message error when publisher already exists', async () => {
+        const publisher = new Publisher(
+            {
+                name: 'Name 1',
+            },
+            '1',
+        );
+
+        const publishersRepository = MockRepository();
+        publishersRepository.findByName.mockReturnValue(
+            Promise.resolve(publisher),
+        );
+
+        const updatePublisherUseCase = new UpdatePublisherUseCase(
+            publishersRepository,
+        );
+
+        const result = await updatePublisherUseCase.execute({
+            id: '2',
+            name: 'Name 1',
+        });
+
+        expect(result.isLeft()).toBe(true);
+        expect(result.value).toBeInstanceOf(PublisherAlreadyExistsError);
     });
 });

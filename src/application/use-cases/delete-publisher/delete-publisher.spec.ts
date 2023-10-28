@@ -12,6 +12,7 @@ const publisher = new Publisher(
 const MockRepository = () => {
     return {
         findById: vi.fn().mockReturnValue(Promise.resolve(publisher)),
+        findByName: vi.fn(),
         findMany: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
