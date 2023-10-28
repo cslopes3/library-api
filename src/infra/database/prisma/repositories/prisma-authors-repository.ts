@@ -22,6 +22,20 @@ export class PrismaAuthorsRepository implements AuthorsRepository {
         return PrismaAuthorMapper.toDomainLayer(author);
     }
 
+    async findByName(name: string): Promise<Author | null> {
+        const author = await this.prisma.author.findFirst({
+            where: {
+                name,
+            },
+        });
+
+        if (!author) {
+            return null;
+        }
+
+        return PrismaAuthorMapper.toDomainLayer(author);
+    }
+
     async findMany({ page }: PaginationParams): Promise<Author[] | []> {
         const authors = await this.prisma.author.findMany({
             orderBy: {

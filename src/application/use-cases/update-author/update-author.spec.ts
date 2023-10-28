@@ -1,6 +1,7 @@
 import { Author } from '@domain/entities/author';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { UpdateAuthorUseCase } from './update-author';
+import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
 
 const author = new Author(
     {
@@ -12,6 +13,7 @@ const author = new Author(
 const MockRepository = () => {
     return {
         findById: vi.fn().mockReturnValue(Promise.resolve(author)),
+        findByName: vi.fn(),
         findMany: vi.fn(),
         create: vi.fn(),
         update: vi.fn().mockReturnValue(Promise.resolve(author)),
@@ -51,5 +53,27 @@ describe('[UT] - Update author use case', () => {
 
         expect(result.isLeft()).toBe(true);
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
+    });
+
+    it('should return a message error when author already exists', async () => {
+        const author = new Author(
+            {
+                name: 'Name 1',
+            },
+            '1',
+        );
+
+        const authorsRepository = MockRepository();
+        authorsRepository.findByName.mockReturnValue(Promise.resolve(author));
+
+        const updateAuthorUseCase = new UpdateAuthorUseCase(authorsRepository);
+
+        const result = await updateAuthorUseCase.execute({
+            id: '2',
+            name: 'Name 1',
+        });
+
+        expect(result.isLeft()).toBe(true);
+        expect(result.value).toBeInstanceOf(AuthorAlreadyExistsError);
     });
 });

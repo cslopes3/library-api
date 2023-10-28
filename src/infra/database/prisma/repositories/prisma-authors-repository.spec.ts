@@ -60,7 +60,7 @@ describe('[UT] - Authors repository', () => {
         expect(result).toHaveLength(0);
     });
 
-    it('should find an author', async () => {
+    it('should find an author by id', async () => {
         await prisma.author.create({
             data: {
                 id: '1',
@@ -73,8 +73,26 @@ describe('[UT] - Authors repository', () => {
         expect(result?.name).toEqual('Name 1');
     });
 
-    it('should return null when not found an author', async () => {
+    it('should return null when not found an author by id', async () => {
         const result = await authorsRepository.findById('1');
+
+        expect(result).toBeNull();
+    });
+
+    it('should find an author by name', async () => {
+        await prisma.author.create({
+            data: {
+                name: 'Name 1',
+            },
+        });
+
+        const result = await authorsRepository.findByName('Name 1');
+
+        expect(result?.name).toEqual('Name 1');
+    });
+
+    it('should return null when not found an author by name', async () => {
+        const result = await authorsRepository.findByName('Name 1');
 
         expect(result).toBeNull();
     });

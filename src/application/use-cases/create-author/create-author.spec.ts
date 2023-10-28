@@ -1,8 +1,11 @@
+import { Author } from '@domain/entities/author';
 import { CreateAuthorUseCase } from './create-author';
+import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
 
 const MockRepository = () => {
     return {
         findById: vi.fn(),
+        findByName: vi.fn(),
         findMany: vi.fn(),
         create: vi.fn(),
         update: vi.fn(),
@@ -10,10 +13,12 @@ const MockRepository = () => {
     };
 };
 
+let createAuthorUseCase: CreateAuthorUseCase;
+
 describe('[UT] - Create author use case', () => {
     it('should create an author', async () => {
-        const authorRepository = MockRepository();
-        const createAuthorUseCase = new CreateAuthorUseCase(authorRepository);
+        const authorsRepository = MockRepository();
+        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
 
         const result = await createAuthorUseCase.execute({
             name: 'Name 1',
@@ -26,5 +31,23 @@ describe('[UT] - Create author use case', () => {
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
+    });
+
+    it('should return a message error when author already exists', async () => {
+        const author = new Author({
+            name: 'Name 1',
+        });
+
+        const authorsRepository = MockRepository();
+        authorsRepository.findByName.mockReturnValue(Promise.resolve(author));
+
+        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
+
+        const result = await createAuthorUseCase.execute({
+            name: 'Name 1',
+        });
+
+        expect(result.isLeft()).toBe(true);
+        expect(result.value).toBeInstanceOf(AuthorAlreadyExistsError);
     });
 });

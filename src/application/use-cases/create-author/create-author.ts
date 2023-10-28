@@ -5,7 +5,8 @@ import {
     CreateAuthorInputDto,
     CreateAuthorOutputDto,
 } from './create-author-dto';
-import { Either, right } from '@shared/errors/either';
+import { Either, left, right } from '@shared/errors/either';
+import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
 
 @Injectable()
 export class CreateAuthorUseCase {
@@ -13,7 +14,16 @@ export class CreateAuthorUseCase {
 
     async execute({
         name,
-    }: CreateAuthorInputDto): Promise<Either<null, CreateAuthorOutputDto>> {
+    }: CreateAuthorInputDto): Promise<
+        Either<AuthorAlreadyExistsError, CreateAuthorOutputDto>
+    > {
+        const authorWithSameName =
+            await this.authorsRepository.findByName(name);
+
+        if (authorWithSameName) {
+            return left(new AuthorAlreadyExistsError(name));
+        }
+
         const author = new Author({ name });
 
         await this.authorsRepository.create(author);
