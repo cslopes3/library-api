@@ -8,6 +8,7 @@ import { PrismaAuthorMapper } from '../mappers/prisma-author-mapper';
 @Injectable()
 export class PrismaAuthorsRepository implements AuthorsRepository {
     constructor(private prisma: PrismaService) {}
+
     async findById(id: string): Promise<Author | null> {
         const author = await this.prisma.author.findUnique({
             where: {
@@ -73,5 +74,9 @@ export class PrismaAuthorsRepository implements AuthorsRepository {
                 id,
             },
         });
+    }
+
+    async validateManyIds(ids: string[]): Promise<boolean> {
+        throw new Error('Method not implemented.');
     }
 }

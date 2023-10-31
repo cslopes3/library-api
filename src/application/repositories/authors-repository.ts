@@ -8,4 +8,5 @@ export abstract class AuthorsRepository {
     abstract create(author: Author): Promise<void>;
     abstract update(author: Author): Promise<void>;
     abstract delete(id: string): Promise<void>;
+    abstract validateManyIds(id: string[]): Promise<boolean>;
 }

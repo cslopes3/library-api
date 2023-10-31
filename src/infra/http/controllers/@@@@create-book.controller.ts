@@ -11,7 +11,7 @@ const createBookBodySchema = z.object({
     quantity: z.number().int(),
     pages: z.number().int(),
     publisherId: z.string(),
-    authorId: z.array(z.string()),
+    authors: z.array(z.string()),
 });
 
 type CreateBookBodySchema = z.infer<typeof createBookBodySchema>;
@@ -31,16 +31,16 @@ export class AddBookController {
             quantity,
             pages,
             publisherId,
-            authorId,
+            authors,
         } = body;
 
         const numberOfExistingAuthors = await this.prisma.author.count({
             where: {
-                id: { in: authorId },
+                id: { in: authors },
             },
         });
 
-        if (numberOfExistingAuthors !== authorId.length) {
+        if (numberOfExistingAuthors !== authors.length) {
             // throw new
         }
 

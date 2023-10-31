@@ -7,7 +7,7 @@ export class UniqueId {
         this._id = id ?? randomUUID();
     }
 
-    toString(): string {
+    public toString(): string {
         return this._id;
     }
 }

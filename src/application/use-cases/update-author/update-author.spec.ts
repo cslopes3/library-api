@@ -18,6 +18,7 @@ const MockRepository = () => {
         create: vi.fn(),
         update: vi.fn().mockReturnValue(Promise.resolve(author)),
         delete: vi.fn(),
+        validateManyIds: vi.fn(),
     };
 };
 

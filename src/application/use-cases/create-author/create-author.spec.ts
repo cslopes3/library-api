@@ -10,6 +10,7 @@ const MockRepository = () => {
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        validateManyIds: vi.fn(),
     };
 };
 
