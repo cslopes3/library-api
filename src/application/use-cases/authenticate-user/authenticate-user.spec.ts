@@ -6,6 +6,7 @@ import { WrongCredentialsError } from '@usecase/@errors/wrong-credentials-error'
 
 const MockRepository = () => {
     return {
+        findById: vi.fn(),
         findByEmail: vi.fn(),
         create: vi.fn(),
     };

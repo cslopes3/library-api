@@ -5,6 +5,7 @@ import { User } from '@domain/entities/user';
 
 const MockRepository = () => {
     return {
+        findById: vi.fn(),
         findByEmail: vi.fn(),
         create: vi.fn(),
     };

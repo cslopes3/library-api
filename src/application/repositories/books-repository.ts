@@ -7,5 +7,10 @@ export abstract class BooksRepository {
     abstract delete(id: string): Promise<void>;
     abstract findById(id: string): Promise<Book | null>;
     abstract findByName(name: string): Promise<Book | null>;
-    abstract findMany(params: PaginationParams): Promise<Book[] | []>;
+    abstract findMany(
+        params: PaginationParams,
+        ids?: string[],
+    ): Promise<Book[] | []>;
+    abstract addBookToStock(id: string, amount: number): Promise<void>;
+    abstract removeBookFromStock(id: string, amount: number): Promise<void>;
 }

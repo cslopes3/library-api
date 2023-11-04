@@ -3,11 +3,15 @@ import { BookAuthors } from '@domain/value-objects/book-authors';
 import { BookEdition } from '@domain/value-objects/book-edition';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { DeleteBookUseCase } from './delete-book';
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 
 const book = new Book({
     name: 'Book 1',
-    authors: [new BookAuthors('1', 'Author 1'), new BookAuthors('2', 'Author 2')],
-    publisherId: '1',
+    authors: [
+        new BookAuthors('1', 'Author 1'),
+        new BookAuthors('2', 'Author 2'),
+    ],
+    publisher: new BookPublisher('1', 'Publisher 1'),
     edition: new BookEdition(3, 'Book 1 description', 2023),
     quantity: 3,
     available: 3,
@@ -22,6 +26,8 @@ const BookMockRepository = () => {
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        addBookToStock: vi.fn(),
+        removeBookFromStock: vi.fn(),
     };
 };
 

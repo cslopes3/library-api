@@ -71,6 +71,8 @@ const MockRepository = () => {
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        addBookToStock: vi.fn(),
+        removeBookFromStock: vi.fn(),
     };
 };
 

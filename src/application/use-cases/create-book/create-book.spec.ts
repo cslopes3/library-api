@@ -8,7 +8,7 @@ import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not
 import { Publisher } from '@domain/entities/publisher';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
 
-const BookMockRepository = () => {
+const BooksMockRepository = () => {
     return {
         findById: vi.fn(),
         findByName: vi.fn().mockReturnValue(Promise.resolve(null)),
@@ -16,6 +16,8 @@ const BookMockRepository = () => {
         create: vi.fn(),
         update: vi.fn(),
         delete: vi.fn(),
+        addBookToStock: vi.fn(),
+        removeBookFromStock: vi.fn(),
     };
 };
 
@@ -46,7 +48,7 @@ const PublishersMockRepository = () => {
 
 describe('[UT] - Create book use case', () => {
     it('should create a book', async () => {
-        const booksRepository = BookMockRepository();
+        const booksRepository = BooksMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
         const createBookUseCase = new CreateBookUseCase(
@@ -98,7 +100,7 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when the book name already exists', async () => {
-        const booksRepository = BookMockRepository();
+        const booksRepository = BooksMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -153,7 +155,7 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when an author does not exists', async () => {
-        const booksRepository = BookMockRepository();
+        const booksRepository = BooksMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -195,7 +197,7 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when publisher does not exists', async () => {
-        const booksRepository = BookMockRepository();
+        const booksRepository = BooksMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
