@@ -14,6 +14,7 @@ import { Reservation } from '@domain/entities/reservation';
 import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error';
 import dayjs from 'dayjs';
+import { dateIsSameOrBeforeCurrentDate } from '@shared/utils/date-is-same-or-before-current-date';
 
 export class CreateReservationUseCase {
     constructor(
@@ -74,7 +75,9 @@ export class CreateReservationUseCase {
                     if (!item.returned) {
                         numberOfBooksAlreadyReserved += 1;
 
-                        if (dayjs(item.expirationDate).day() < dayjs().day()) {
+                        if (
+                            !dateIsSameOrBeforeCurrentDate(item.expirationDate)
+                        ) {
                             bookWithReturnDateExpired = true;
                         }
                     }

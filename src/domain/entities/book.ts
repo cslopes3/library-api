@@ -65,4 +65,14 @@ export class Book extends Entity<BookProps> {
     public changePages(pages: number) {
         this.props.pages = pages;
     }
+
+    public addBookToStock(amount: number) {
+        this.props.available += amount;
+        this.props.quantity += amount;
+    }
+
+    public removeBookFromStock(amount: number) {
+        this.props.available -= amount;
+        this.props.quantity -= amount;
+    }
 }

@@ -43,7 +43,7 @@ describe('[UT] - Delete book use case', () => {
         expect(result.isRight()).toBe(true);
     });
 
-    it('should return error when author is not found', async () => {
+    it('should return error when book is not found', async () => {
         const booksRepository = BookMockRepository();
         booksRepository.findById.mockReturnValue(Promise.resolve(null));
 

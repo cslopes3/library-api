@@ -9,6 +9,7 @@ import dayjs from 'dayjs';
 import { AlreadyExtendedError } from '@usecase/@errors/already-extended-error';
 import { ExpiredDateError } from '@usecase/@errors/expired-date-error';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
+import { dateIsSameOrBeforeCurrentDate } from '@shared/utils/date-is-same-or-before-current-date';
 
 export class ExtendReservationUseCase {
     constructor(private reservationsRepository: ReservationsRepository) {}
@@ -95,9 +96,4 @@ export class ExtendReservationUseCase {
             updatedAt: reservation.updatedAt,
         });
     }
-}
-
-function dateIsSameOrBeforeCurrentDate(date: Date) {
-    const currentDate = dayjs();
-    return currentDate.isBefore(date, 'day') || currentDate.isSame(date, 'day');
 }
