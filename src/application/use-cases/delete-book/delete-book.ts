@@ -2,9 +2,13 @@ import { BooksRepository } from '@repository/books-repository';
 import { DeleteBookInputDto } from './delete-book-dto';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { Either, left, right } from '@shared/errors/either';
+import { BookAuthorsRepository } from '@repository/book-authors-repository';
 
 export class DeleteBookUseCase {
-    constructor(private booksRepository: BooksRepository) {}
+    constructor(
+        private booksRepository: BooksRepository,
+        private bookAuthorsRepository: BookAuthorsRepository,
+    ) {}
 
     async execute({
         id,
@@ -15,6 +19,7 @@ export class DeleteBookUseCase {
             return left(new ResourceNotFoundError());
         }
 
+        await this.bookAuthorsRepository.delete(id);
         await this.booksRepository.delete(id);
 
         return right(null);

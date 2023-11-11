@@ -13,6 +13,9 @@ model User {
   email    String @unique
   password String
 
+  reservations Reservation[]
+  schedules    Schedule[]
+
   @@map("users")
 }
 
@@ -29,18 +32,21 @@ model Book {
   updatedAt          DateTime? @updatedAt @map("updated_at")
   publisherId        String    @map("publisher_id")
 
-  publisher Publisher     @relation(fields: [publisherId], references: [id])
-  authors   BookAuthors[]
+  publisher        Publisher         @relation(fields: [publisherId], references: [id])
+  authors          BookAuthors[]
+  reservationItems ReservationItem[]
+  scheduleItems    ScheduleItem[]
 
   @@map("books")
 }
 
 model Author {
-  id        String        @id @default(uuid())
+  id        String    @id @default(uuid())
   name      String
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime?     @updatedAt @map("updated_at")
-  books     BookAuthors[]
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  books BookAuthors[]
 
   @@map("authors")
 }
@@ -65,4 +71,59 @@ model Publisher {
   books Book[]
 
   @@map("publishers")
+}
+
+model Reservation {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  reservationItems ReservationItem[]
+
+  @@map("reservations")
+}
+
+model ReservationItem {
+  id                String    @id @default(uuid())
+  reservationId     String    @map("reservation_id")
+  bookId            String    @map("book_id")
+  name              String
+  expirationDate    DateTime  @map("expiration_date")
+  alreadyExtendTime Boolean   @map("already_extend_time")
+  returned          Boolean
+  returnDate        DateTime? @map("return_date")
+
+  book        Book        @relation(fields: [bookId], references: [id])
+  reservation Reservation @relation(fields: [reservationId], references: [id])
+
+  @@map("reservation_items")
+}
+
+model Schedule {
+  id        String    @id @default(uuid())
+  date      DateTime
+  userId    String    @map("user_id")
+  status    String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime? @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id])
+  scheduleItems ScheduleItem[]
+
+  @@map("schedules")
+}
+
+model ScheduleItem {
+  id         String @id @default(uuid())
+  scheduleId String @map("schedule_id")
+  bookId     String @map("book_id")
+  name       String
+
+  book     Book     @relation(fields: [bookId], references: [id])
+  schedule Schedule @relation(fields: [scheduleId], references: [id])
+
+  @@map("schedule_items")
 }

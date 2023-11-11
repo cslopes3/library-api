@@ -60,4 +60,25 @@ describe('[UT] - Users repository', () => {
 
         expect(result).toBeNull();
     });
+
+    it('should find user by id', async () => {
+        await prisma.user.create({
+            data: {
+                id: '1',
+                name: 'Name 1',
+                email: 'email@email.com',
+                password: '123456',
+            },
+        });
+
+        const result = await usersRepository.findById('1');
+
+        expect(result?.name).toEqual('Name 1');
+    });
+
+    it('should return null when not found an user', async () => {
+        const result = await usersRepository.findById('1');
+
+        expect(result).toBeNull();
+    });
 });

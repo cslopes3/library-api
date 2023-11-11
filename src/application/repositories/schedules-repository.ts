@@ -5,7 +5,7 @@ export abstract class SchedulesRepository {
     abstract findById(id: string): Promise<Schedule | null>;
     abstract findByUserIdAndLastDays(
         userId: string,
-        lastDays?: number,
+        minimumDate?: Date,
     ): Promise<Schedule[] | []>;
     abstract changeStatus(id: string, status: string): Promise<void>;
 }

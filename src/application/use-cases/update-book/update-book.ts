@@ -10,10 +10,12 @@ import { AuthorDoesNotExistsError } from '@usecase/@errors/author-does-not-exist
 import { PublishersRepository } from '@repository/publishers-repository';
 import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not-exists-error';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
+import { BookAuthorsRepository } from '@repository/book-authors-repository';
 
 export class UpdateBookUseCase {
     constructor(
         private booksRepository: BooksRepository,
+        private bookAuthorsRepository: BookAuthorsRepository,
         private authorsRepository: AuthorsRepository,
         private publishersRepository: PublishersRepository,
     ) {}
@@ -75,6 +77,11 @@ export class UpdateBookUseCase {
         book.changePages(pages);
 
         await this.booksRepository.update(book);
+        await this.bookAuthorsRepository.delete(book.id.toString());
+        await this.bookAuthorsRepository.create(
+            book.id.toString(),
+            book.authors.map((author) => author.id),
+        );
 
         return right({
             id: book.id.toString(),

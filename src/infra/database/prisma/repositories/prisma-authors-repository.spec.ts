@@ -96,4 +96,73 @@ describe('[UT] - Authors repository', () => {
 
         expect(result).toBeNull();
     });
+
+    it('should update a author', async () => {
+        vi.spyOn(prisma.author, 'update');
+
+        await prisma.author.create({
+            data: {
+                id: '1',
+                name: 'Name 1',
+            },
+        });
+
+        const author = new Author({ name: 'Name 1' });
+
+        await authorsRepository.update(author);
+
+        expect(prisma.author.update).toHaveBeenCalledWith({
+            where: {
+                id: author.id.toString(),
+            },
+            data: {
+                id: author.id.toString(),
+                name: author.name,
+            },
+        });
+    });
+
+    it('should delete a author', async () => {
+        vi.spyOn(prisma.author, 'delete');
+
+        await prisma.author.create({
+            data: {
+                id: '1',
+                name: 'Name 1',
+            },
+        });
+
+        await authorsRepository.delete('1');
+
+        expect(prisma.author.delete).toHaveBeenCalledWith({
+            where: {
+                id: '1',
+            },
+        });
+    });
+
+    it('should return true when validating multiples ids', async () => {
+        await prisma.author.createMany({
+            data: [
+                {
+                    id: '1',
+                    name: 'Name 1',
+                },
+                {
+                    id: '2',
+                    name: 'Name 2',
+                },
+            ],
+        });
+
+        const result = await authorsRepository.validateManyIds(['1', '2']);
+
+        expect(result).toBe(true);
+    });
+
+    it('should return false when fail to validate multiples ids', async () => {
+        const result = await authorsRepository.validateManyIds(['1', '2']);
+
+        expect(result).toBe(false);
+    });
 });

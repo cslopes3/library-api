@@ -21,6 +21,13 @@ const BooksMockRepository = () => {
     };
 };
 
+const BookAuthorsMockRepository = () => {
+    return {
+        create: vi.fn(),
+        delete: vi.fn(),
+    };
+};
+
 const AuthorsMockRepository = () => {
     return {
         findById: vi.fn(),
@@ -49,10 +56,15 @@ const PublishersMockRepository = () => {
 describe('[UT] - Create book use case', () => {
     it('should create a book', async () => {
         const booksRepository = BooksMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
+
+        vi.spyOn(bookAuthorsRepository, 'create');
+
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
@@ -97,10 +109,12 @@ describe('[UT] - Create book use case', () => {
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
+        expect(bookAuthorsRepository.create).toHaveBeenCalledOnce();
     });
 
     it('should return a message error when the book name already exists', async () => {
         const booksRepository = BooksMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -123,6 +137,7 @@ describe('[UT] - Create book use case', () => {
 
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
@@ -156,6 +171,7 @@ describe('[UT] - Create book use case', () => {
 
     it('should return a message error when an author does not exists', async () => {
         const booksRepository = BooksMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -165,6 +181,7 @@ describe('[UT] - Create book use case', () => {
 
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
@@ -198,6 +215,7 @@ describe('[UT] - Create book use case', () => {
 
     it('should return a message error when publisher does not exists', async () => {
         const booksRepository = BooksMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -205,6 +223,7 @@ describe('[UT] - Create book use case', () => {
 
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );

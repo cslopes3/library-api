@@ -6,6 +6,7 @@ import {
 } from './find-last-thirty-days-schedule-by-user-id-dto';
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { Either, left, right } from '@shared/errors/either';
+import dayjs from 'dayjs';
 
 export class FindLastThirtyScheduleByUserIdUseCase {
     constructor(
@@ -27,8 +28,15 @@ export class FindLastThirtyScheduleByUserIdUseCase {
             return left(new UserDoesNotExistsError());
         }
 
+        const currentDateSubtractThirtyDays = dayjs()
+            .subtract(30, 'days')
+            .toDate();
+
         const schedules =
-            await this.schedulesRepository.findByUserIdAndLastDays(userId, 30);
+            await this.schedulesRepository.findByUserIdAndLastDays(
+                userId,
+                currentDateSubtractThirtyDays,
+            );
 
         return right(
             schedules.map((schedule) => ({

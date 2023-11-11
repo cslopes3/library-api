@@ -77,6 +77,12 @@ export class PrismaAuthorsRepository implements AuthorsRepository {
     }
 
     async validateManyIds(ids: string[]): Promise<boolean> {
-        throw new Error('Method not implemented.');
+        const authors = await this.prisma.author.findMany({
+            where: {
+                id: { in: ids },
+            },
+        });
+
+        return authors.length === ids.length;
     }
 }

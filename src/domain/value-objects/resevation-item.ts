@@ -16,6 +16,7 @@ export class ReservationItem {
         alreadyExtendTime: boolean,
         returned: boolean,
         id?: string,
+        returnDate?: Date,
     ) {
         this._bookId = bookId;
         this._name = name;
@@ -23,6 +24,7 @@ export class ReservationItem {
         this._alreadyExtendTime = alreadyExtendTime;
         this._returned = returned || false;
         this._id = new UniqueId(id);
+        this._returnDate = returnDate;
     }
 
     get id(): UniqueId {

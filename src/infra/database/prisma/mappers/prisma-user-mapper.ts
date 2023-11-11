@@ -2,7 +2,7 @@ import { User } from '@domain/entities/user';
 import { User as PrismaUser, Prisma } from '@prisma/client';
 
 export class PrismaUserMapper {
-    static toDomain(raw: PrismaUser): User {
+    static toDomainLayer(raw: PrismaUser): User {
         return new User(
             {
                 name: raw.name,
@@ -13,7 +13,7 @@ export class PrismaUserMapper {
         );
     }
 
-    static toPrisma(user: User): Prisma.UserUncheckedCreateInput {
+    static toPersistent(user: User): Prisma.UserUncheckedCreateInput {
         return {
             id: user.id.toString(),
             name: user.name,

@@ -89,8 +89,15 @@ export class CreateReservationScheduleUseCase {
             return left(new ReserveLimitError(numberOfBooksAlreadyReserved));
         }
 
+        const currentDateSubtractThirtyDays = dayjs()
+            .subtract(30, 'days')
+            .toDate();
+
         const schedules =
-            await this.schedulesRepository.findByUserIdAndLastDays(userId, 30);
+            await this.schedulesRepository.findByUserIdAndLastDays(
+                userId,
+                currentDateSubtractThirtyDays,
+            );
 
         const booksThatCantBeSchedule = findBooksThatCantBeSchedule(
             scheduleItems,

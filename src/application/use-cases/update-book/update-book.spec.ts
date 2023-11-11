@@ -38,6 +38,13 @@ const BookMockRepository = () => {
     };
 };
 
+const BookAuthorsMockRepository = () => {
+    return {
+        create: vi.fn(),
+        delete: vi.fn(),
+    };
+};
+
 const AuthorsMockRepository = () => {
     return {
         findById: vi.fn(),
@@ -66,13 +73,18 @@ const PublishersMockRepository = () => {
 describe('[UT] - Update book use case', () => {
     it('should update a book', async () => {
         const booksRepository = BookMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
         const updateBookUseCase = new UpdateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
+
+        vi.spyOn(bookAuthorsRepository, 'create');
+        vi.spyOn(bookAuthorsRepository, 'delete');
 
         const book = {
             id: '1',
@@ -109,10 +121,15 @@ describe('[UT] - Update book use case', () => {
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
+        expect(bookAuthorsRepository.delete).toHaveBeenCalledWith(
+            book.id.toString(),
+        );
+        expect(bookAuthorsRepository.create).toHaveBeenCalledOnce();
     });
 
     it('should return a message error when the book name already exists', async () => {
         const booksRepository = BookMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -122,6 +139,7 @@ describe('[UT] - Update book use case', () => {
 
         const updateBookUseCase = new UpdateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
@@ -149,6 +167,7 @@ describe('[UT] - Update book use case', () => {
 
     it('should return a message error when an author does not exists', async () => {
         const booksRepository = BookMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -158,6 +177,7 @@ describe('[UT] - Update book use case', () => {
 
         const updateBookUseCase = new UpdateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
@@ -185,6 +205,7 @@ describe('[UT] - Update book use case', () => {
 
     it('should return error when book is not found', async () => {
         const booksRepository = BookMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -192,6 +213,7 @@ describe('[UT] - Update book use case', () => {
 
         const updateBookUseCase = new UpdateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );
@@ -219,6 +241,7 @@ describe('[UT] - Update book use case', () => {
 
     it('should return a message error when publisher does not exists', async () => {
         const booksRepository = BookMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
         const authorsRepository = AuthorsMockRepository();
         const publishersRepository = PublishersMockRepository();
 
@@ -226,6 +249,7 @@ describe('[UT] - Update book use case', () => {
 
         const updateBookUseCase = new UpdateBookUseCase(
             booksRepository,
+            bookAuthorsRepository,
             authorsRepository,
             publishersRepository,
         );

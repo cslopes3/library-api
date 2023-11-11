@@ -31,23 +31,45 @@ const BookMockRepository = () => {
     };
 };
 
+const BookAuthorsMockRepository = () => {
+    return {
+        create: vi.fn(),
+        delete: vi.fn(),
+    };
+};
+
 describe('[UT] - Delete book use case', () => {
     it('should delete book', async () => {
         const booksRepository = BookMockRepository();
-        const deleteBookUseCase = new DeleteBookUseCase(booksRepository);
+        const bookAuthorsRepository = BookAuthorsMockRepository();
+
+        vi.spyOn(bookAuthorsRepository, 'delete');
+
+        const deleteBookUseCase = new DeleteBookUseCase(
+            booksRepository,
+            bookAuthorsRepository,
+        );
 
         const result = await deleteBookUseCase.execute({
             id: book.id.toString(),
         });
 
         expect(result.isRight()).toBe(true);
+        expect(bookAuthorsRepository.delete).toHaveBeenCalledWith(
+            book.id.toString(),
+        );
     });
 
     it('should return error when book is not found', async () => {
         const booksRepository = BookMockRepository();
+        const bookAuthorsRepository = BookAuthorsMockRepository();
+
         booksRepository.findById.mockReturnValue(Promise.resolve(null));
 
-        const deleteBookUseCase = new DeleteBookUseCase(booksRepository);
+        const deleteBookUseCase = new DeleteBookUseCase(
+            booksRepository,
+            bookAuthorsRepository,
+        );
 
         const result = await deleteBookUseCase.execute({
             id: book.id.toString(),
