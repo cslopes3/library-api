@@ -4,16 +4,16 @@ import {
 } from 'test/utils/test-environment-setup';
 import { PrismaService } from '../prisma.service';
 import { PrismaBooksRepository } from './prisma-books-repository';
-import { Book } from '@domain/entities/book';
 import { BookAuthors } from '@domain/value-objects/book-authors';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { BookEdition } from '@domain/value-objects/book-edition';
+import { FakeBookFactory } from 'test/factories/fake-book-factory';
 
 let prisma: PrismaService;
 let booksRepository: PrismaBooksRepository;
 
 describe('[UT] - Books repository', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         booksRepository = new PrismaBooksRepository(prisma);
@@ -26,32 +26,21 @@ describe('[UT] - Books repository', () => {
     it('should create a author', async () => {
         vi.spyOn(prisma.book, 'create');
 
-        const book = new Book(
-            {
-                name: 'Book 1',
-                authors: [new BookAuthors('1', 'Author 1')],
-                publisher: new BookPublisher('1', 'Publisher 1'),
-                edition: new BookEdition(3, 'Book 1 description', 2023),
-                quantity: 3,
-                available: 1,
-                pages: 200,
-            },
-            '1',
-        );
+        const book = FakeBookFactory.create();
 
         await booksRepository.create(book);
 
         expect(prisma.book.create).toHaveBeenCalledWith({
             data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2023,
-                quantity: 3,
-                available: 1,
-                pages: 200,
+                id: book.id.toString(),
+                name: book.name,
+                publisherId: book.publisher.id,
+                editionNumber: book.edition.number,
+                editionDescription: book.edition.description,
+                editionYear: book.edition.year,
+                quantity: book.quantity,
+                available: book.available,
+                pages: book.pages,
             },
         });
     });
@@ -80,40 +69,33 @@ describe('[UT] - Books repository', () => {
                 publisherId: '1',
                 editionNumber: 3,
                 editionDescription: 'Book 1 description',
-                editionYear: 2023,
+                editionYear: 2020,
                 quantity: 3,
                 available: 1,
-                pages: 200,
+                pages: 10,
             },
         });
 
-        const book = new Book(
-            {
-                name: 'Book 1',
-                authors: [new BookAuthors('1', 'Author 1')],
-                publisher: new BookPublisher('1', 'Publisher 1'),
-                edition: new BookEdition(3, 'Book 1 description', 2023),
-                quantity: 3,
-                available: 1,
-                pages: 400,
-            },
-            '1',
-        );
+        const book = FakeBookFactory.create({
+            authors: [new BookAuthors('1', 'Author 1')],
+            publisher: new BookPublisher('1', 'Publisher 1'),
+            edition: new BookEdition(3, 'Book 1 description', 2023),
+        });
 
         await booksRepository.update(book);
 
         expect(prisma.book.update).toHaveBeenCalledWith({
             where: {
-                id: '1',
+                id: book.id.toString(),
             },
             data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2023,
-                pages: 400,
+                id: book.id.toString(),
+                name: book.name,
+                publisherId: book.publisher.id,
+                editionNumber: book.edition.number,
+                editionDescription: book.edition.description,
+                editionYear: book.edition.year,
+                pages: book.pages,
             },
         });
     });

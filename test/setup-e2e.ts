@@ -7,7 +7,7 @@ import {
 
 const prisma = new PrismaClient();
 
-beforeAll(async () => {
+beforeAll(() => {
     startEnvironment();
 });
 

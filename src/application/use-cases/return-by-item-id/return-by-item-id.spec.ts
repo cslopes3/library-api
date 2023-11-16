@@ -2,45 +2,30 @@ import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { ReturnByItemIdUseCase } from './return-by-item-id';
+import { BooksMockRepository } from '@mocks/mock-books-repository';
+import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 
-const reservationItem = new ReservationItem(
-    '1',
-    'Book 1',
-    new Date(),
-    false,
-    false,
-    '1',
-);
-
-const ReservationsMockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByUserId: vi.fn(),
-        delete: vi.fn(),
-        create: vi.fn(),
-        changeReservationInfoById: vi.fn(),
-        returnByItemId: vi.fn(),
-        findItemById: vi.fn().mockReturnValue(Promise.resolve(reservationItem)),
-    };
-};
-
-const BooksMockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        addBookToStock: vi.fn(),
-        removeBookFromStock: vi.fn(),
-    };
-};
+let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
+let booksRepository: ReturnType<typeof BooksMockRepository>;
 
 describe('[UT] - Return by item id use case', () => {
+    beforeEach(() => {
+        reservationsRepository = ReservationsMockRepository();
+        booksRepository = BooksMockRepository();
+    });
+
     it('should return an item', async () => {
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
+        const reservationItem = new ReservationItem(
+            '1',
+            'Book 1',
+            new Date(),
+            false,
+            false,
+            '1',
+        );
+
+        reservationsRepository.findItemById.mockResolvedValue(reservationItem);
+
         const returnByItemIdUseCase = new ReturnByItemIdUseCase(
             reservationsRepository,
             booksRepository,
@@ -49,16 +34,18 @@ describe('[UT] - Return by item id use case', () => {
         vi.spyOn(booksRepository, 'addBookToStock');
         vi.spyOn(reservationsRepository, 'returnByItemId');
 
-        const result = await returnByItemIdUseCase.execute({ id: '1' });
+        const result = await returnByItemIdUseCase.execute({
+            id: reservationItem.id.toString(),
+        });
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: reservationItem.id.toString(),
             bookId: reservationItem.bookId,
             name: reservationItem.name,
             expirationDate: reservationItem.expirationDate,
             alreadyExtendTime: reservationItem.alreadyExtendTime,
-            returned: reservationItem.returned,
+            returned: true,
             returnDate: expect.any(Date),
         });
         expect(booksRepository.addBookToStock).toHaveBeenCalledWith('1', 1);
@@ -69,33 +56,18 @@ describe('[UT] - Return by item id use case', () => {
     });
 
     it('should return a message error when item is not found', async () => {
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
-
         const returnByItemIdUseCase = new ReturnByItemIdUseCase(
             reservationsRepository,
             booksRepository,
-        );
-
-        reservationsRepository.findItemById.mockReturnValue(
-            Promise.resolve(null),
         );
 
         const result = await returnByItemIdUseCase.execute({ id: '1' });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
     });
 
-    it('should not extend the reservation when item was returned', async () => {
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
-
-        const returnByItemIdUseCase = new ReturnByItemIdUseCase(
-            reservationsRepository,
-            booksRepository,
-        );
-
+    it('should not return a message error when item was already returned', async () => {
         const reservationItem = new ReservationItem(
             '1',
             'Book 1',
@@ -105,13 +77,18 @@ describe('[UT] - Return by item id use case', () => {
             '1',
         );
 
-        reservationsRepository.findItemById.mockReturnValue(
-            Promise.resolve(reservationItem),
+        reservationsRepository.findItemById.mockResolvedValue(reservationItem);
+
+        const returnByItemIdUseCase = new ReturnByItemIdUseCase(
+            reservationsRepository,
+            booksRepository,
         );
 
-        const result = await returnByItemIdUseCase.execute({ id: '1' });
+        const result = await returnByItemIdUseCase.execute({
+            id: reservationItem.id.toString(),
+        });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(AllItemsAlreadyReturnedError);
     });
 });

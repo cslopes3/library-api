@@ -4,13 +4,13 @@ import {
 } from 'test/utils/test-environment-setup';
 import { PrismaService } from '../prisma.service';
 import { PrismaUsersRepository } from './prisma-users-repository';
-import { User } from '@domain/entities/user';
+import { FakeUserFactory } from 'test/factories/fake-user-factory';
 
 let prisma: PrismaService;
 let usersRepository: PrismaUsersRepository;
 
 describe('[UT] - Users repository', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         usersRepository = new PrismaUsersRepository(prisma);
@@ -23,11 +23,7 @@ describe('[UT] - Users repository', () => {
     it('should register an user', async () => {
         vi.spyOn(prisma.user, 'create');
 
-        const user = new User({
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: '123456',
-        });
+        const user = FakeUserFactory.create();
 
         await usersRepository.create(user);
 
@@ -44,7 +40,7 @@ describe('[UT] - Users repository', () => {
     it('should find user by email', async () => {
         await prisma.user.create({
             data: {
-                name: 'Name 1',
+                name: 'User 1',
                 email: 'email@email.com',
                 password: '123456',
             },
@@ -52,7 +48,7 @@ describe('[UT] - Users repository', () => {
 
         const result = await usersRepository.findByEmail('email@email.com');
 
-        expect(result?.name).toEqual('Name 1');
+        expect(result?.name).toEqual('User 1');
     });
 
     it('should return null when not found an user', async () => {
@@ -65,7 +61,7 @@ describe('[UT] - Users repository', () => {
         await prisma.user.create({
             data: {
                 id: '1',
-                name: 'Name 1',
+                name: 'User 1',
                 email: 'email@email.com',
                 password: '123456',
             },
@@ -73,7 +69,7 @@ describe('[UT] - Users repository', () => {
 
         const result = await usersRepository.findById('1');
 
-        expect(result?.name).toEqual('Name 1');
+        expect(result?.name).toEqual('User 1');
     });
 
     it('should return null when not found an user', async () => {

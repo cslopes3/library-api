@@ -1,64 +1,33 @@
-import { Book } from '@domain/entities/book';
 import { CreateBookUseCase } from './create-book';
-import { BookAuthors } from '@domain/value-objects/book-authors';
-import { BookEdition } from '@domain/value-objects/book-edition';
 import { BookAlreadyExistsError } from '@usecase/@errors/book-already-exists-error';
 import { AuthorDoesNotExistsError } from '@usecase/@errors/author-does-not-exists-error';
 import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not-exists-error';
-import { Publisher } from '@domain/entities/publisher';
-import { BookPublisher } from '@domain/value-objects/book-publisher';
+import { BooksMockRepository } from '@mocks/mock-books-repository';
+import { BookAuthorsMockRepository } from '@mocks/mock-book-authors-repository';
+import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
+import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
+import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import { FakeBookFactory } from 'test/factories/fake-book-factory';
 
-const BooksMockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn().mockReturnValue(Promise.resolve(null)),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        addBookToStock: vi.fn(),
-        removeBookFromStock: vi.fn(),
-    };
-};
-
-const BookAuthorsMockRepository = () => {
-    return {
-        create: vi.fn(),
-        delete: vi.fn(),
-    };
-};
-
-const AuthorsMockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        validateManyIds: vi.fn().mockReturnValue(Promise.resolve(true)),
-    };
-};
-
-const publisher = new Publisher({ name: 'Publisher Name' });
-
-const PublishersMockRepository = () => {
-    return {
-        findById: vi.fn().mockReturnValue(Promise.resolve(publisher)),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-    };
-};
+let booksRepository: ReturnType<typeof BooksMockRepository>;
+let bookAuthorsRepository: ReturnType<typeof BookAuthorsMockRepository>;
+let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
+let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
 describe('[UT] - Create book use case', () => {
+    beforeEach(() => {
+        booksRepository = BooksMockRepository();
+        bookAuthorsRepository = BookAuthorsMockRepository();
+        authorsRepository = AuthorsMockRepository();
+        publishersRepository = PublishersMockRepository();
+    });
+
     it('should create a book', async () => {
-        const booksRepository = BooksMockRepository();
-        const bookAuthorsRepository = BookAuthorsMockRepository();
-        const authorsRepository = AuthorsMockRepository();
-        const publishersRepository = PublishersMockRepository();
+        const publisher = FakePublisherFactory.create();
+        const book = FakeBookFactory.create();
+
+        authorsRepository.validateManyIds.mockResolvedValue(true);
+        publishersRepository.findById.mockResolvedValue(publisher);
 
         vi.spyOn(bookAuthorsRepository, 'create');
 
@@ -69,40 +38,42 @@ describe('[UT] - Create book use case', () => {
             publishersRepository,
         );
 
-        const book = {
-            name: 'Book 1',
+        const result = await createBookUseCase.execute({
+            name: book.name,
             authors: [
                 {
-                    id: '1',
-                    name: 'Author 1',
-                },
-                {
-                    id: '2',
-                    name: 'Author 2',
+                    id: book.authors[0].id,
+                    name: book.authors[0].name,
                 },
             ],
             publisher: {
-                id: '1',
-                name: 'Publisher 1',
+                id: book.publisher.id,
+                name: book.publisher.name,
             },
-            editionNumber: 3,
-            editionDescription: 'Book 1 description',
-            editionYear: 2023,
-            quantity: 3,
-            pages: 200,
-        };
+            editionNumber: book.edition.number,
+            editionDescription: book.edition.description,
+            editionYear: book.edition.year,
+            quantity: book.quantity,
+            pages: book.pages,
+        });
 
-        const result = await createBookUseCase.execute(book);
-
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: expect.any(String),
             name: book.name,
-            authors: book.authors,
-            publisher: book.publisher,
-            editionNumber: book.editionNumber,
-            editionDescription: book.editionDescription,
-            editionYear: book.editionYear,
+            authors: [
+                {
+                    id: book.authors[0].id,
+                    name: book.authors[0].name,
+                },
+            ],
+            publisher: {
+                id: book.publisher.id,
+                name: book.publisher.name,
+            },
+            editionNumber: book.edition.number,
+            editionDescription: book.edition.description,
+            editionYear: book.edition.year,
             quantity: book.quantity,
             available: book.quantity,
             pages: book.pages,
@@ -113,27 +84,9 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when the book name already exists', async () => {
-        const booksRepository = BooksMockRepository();
-        const bookAuthorsRepository = BookAuthorsMockRepository();
-        const authorsRepository = AuthorsMockRepository();
-        const publishersRepository = PublishersMockRepository();
+        const book = FakeBookFactory.create();
 
-        const book = new Book({
-            name: 'Book 1',
-            authors: [
-                new BookAuthors('1', 'Author 1'),
-                new BookAuthors('2', 'Author 2'),
-            ],
-            publisher: new BookPublisher('1', 'Publisher 1'),
-            edition: new BookEdition(3, 'Book 1 description', 2023),
-            quantity: 3,
-            available: 3,
-            pages: 200,
-        });
-
-        booksRepository.findByName.mockReturnValue(
-            Promise.resolve(new Book(book)),
-        );
+        booksRepository.findByName.mockResolvedValue(book);
 
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
@@ -143,41 +96,32 @@ describe('[UT] - Create book use case', () => {
         );
 
         const result = await createBookUseCase.execute({
-            name: 'Book 1',
+            name: book.name,
             authors: [
                 {
-                    id: '1',
-                    name: 'Author 1',
-                },
-                {
-                    id: '2',
-                    name: 'Author 2',
+                    id: book.authors[0].id,
+                    name: book.authors[0].name,
                 },
             ],
             publisher: {
-                id: '1',
-                name: 'Publisher 1',
+                id: book.publisher.id,
+                name: book.publisher.name,
             },
-            editionNumber: 3,
-            editionDescription: 'Book 1 description',
-            editionYear: 2023,
-            quantity: 3,
-            pages: 200,
+            editionNumber: book.edition.number,
+            editionDescription: book.edition.description,
+            editionYear: book.edition.year,
+            quantity: book.quantity,
+            pages: book.pages,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(BookAlreadyExistsError);
     });
 
     it('should return a message error when an author does not exists', async () => {
-        const booksRepository = BooksMockRepository();
-        const bookAuthorsRepository = BookAuthorsMockRepository();
-        const authorsRepository = AuthorsMockRepository();
-        const publishersRepository = PublishersMockRepository();
+        const book = FakeBookFactory.create();
 
-        authorsRepository.validateManyIds.mockReturnValue(
-            Promise.resolve(false),
-        );
+        authorsRepository.validateManyIds.mockResolvedValue(false);
 
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
@@ -187,39 +131,32 @@ describe('[UT] - Create book use case', () => {
         );
 
         const result = await createBookUseCase.execute({
-            name: 'Book 1',
+            name: book.name,
             authors: [
                 {
-                    id: '1',
-                    name: 'Author 1',
-                },
-                {
-                    id: '2',
-                    name: 'Author 2',
+                    id: book.authors[0].id,
+                    name: book.authors[0].name,
                 },
             ],
             publisher: {
-                id: '1',
-                name: 'Publisher 1',
+                id: book.publisher.id,
+                name: book.publisher.name,
             },
-            editionNumber: 3,
-            editionDescription: 'Book 1 description',
-            editionYear: 2023,
-            quantity: 3,
-            pages: 200,
+            editionNumber: book.edition.number,
+            editionDescription: book.edition.description,
+            editionYear: book.edition.year,
+            quantity: book.quantity,
+            pages: book.pages,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(AuthorDoesNotExistsError);
     });
 
     it('should return a message error when publisher does not exists', async () => {
-        const booksRepository = BooksMockRepository();
-        const bookAuthorsRepository = BookAuthorsMockRepository();
-        const authorsRepository = AuthorsMockRepository();
-        const publishersRepository = PublishersMockRepository();
+        const book = FakeBookFactory.create();
 
-        publishersRepository.findById.mockReturnValue(Promise.resolve(null));
+        authorsRepository.validateManyIds.mockResolvedValue(true);
 
         const createBookUseCase = new CreateBookUseCase(
             booksRepository,
@@ -229,29 +166,25 @@ describe('[UT] - Create book use case', () => {
         );
 
         const result = await createBookUseCase.execute({
-            name: 'Book 1',
+            name: book.name,
             authors: [
                 {
-                    id: '1',
-                    name: 'Author 1',
-                },
-                {
-                    id: '2',
-                    name: 'Author 2',
+                    id: book.authors[0].id,
+                    name: book.authors[0].name,
                 },
             ],
             publisher: {
-                id: '1',
-                name: 'Publisher 1',
+                id: book.publisher.id,
+                name: book.publisher.name,
             },
-            editionNumber: 3,
-            editionDescription: 'Book 1 description',
-            editionYear: 2023,
-            quantity: 3,
-            pages: 200,
+            editionNumber: book.edition.number,
+            editionDescription: book.edition.description,
+            editionYear: book.edition.year,
+            quantity: book.quantity,
+            pages: book.pages,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(PublisherDoesNotExistsError);
     });
 });

@@ -17,6 +17,7 @@
       "@usecase/*": ["./src/application/use-cases/*"],
       "@domain/*": ["./src/domain/*"],
       "@infra/*": ["./src/infra/*"],
+      "@mocks/*": ["./test/mock-repositories/*"],
     },
     "incremental": true,
     "skipLibCheck": true,

@@ -1,33 +1,31 @@
 import { AuthenticateUserUseCase } from './authenticate-user';
 import { FakeEncrypter } from 'test/cryptography/fake-encrypter';
 import { FakeHasher } from 'test/cryptography/fake-hasher';
-import { User } from '@domain/entities/user';
 import { WrongCredentialsError } from '@usecase/@errors/wrong-credentials-error';
+import { UsersMockRepository } from '@mocks/mock-users-repository';
+import { FakeUserFactory } from 'test/factories/fake-user-factory';
 
-const MockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByEmail: vi.fn(),
-        create: vi.fn(),
-    };
-};
+let usersRepository: ReturnType<typeof UsersMockRepository>;
 
-const fakeHasher: FakeHasher = new FakeHasher();
-const encrypter: FakeEncrypter = new FakeEncrypter();
-
+let fakeHasher: FakeHasher;
+let encrypter: FakeEncrypter;
 let authenticateUserUseCase: AuthenticateUserUseCase;
 
 describe('[UT] - Authenticate User', () => {
-    it('should authenticate a user', async () => {
-        const usersRepository = MockRepository();
+    beforeEach(() => {
+        usersRepository = UsersMockRepository();
+        fakeHasher = new FakeHasher();
+        encrypter = new FakeEncrypter();
+    });
 
-        const user = new User({
-            name: 'John Doe',
-            email: 'johndoe@example.com',
-            password: await fakeHasher.hash('123456'),
+    it('should authenticate a user', async () => {
+        const user = FakeUserFactory.create();
+        const hashedPassord = await fakeHasher.hash(user.password);
+        const userWithHashedPassword = FakeUserFactory.create({
+            password: hashedPassord,
         });
 
-        usersRepository.findByEmail.mockReturnValue(Promise.resolve(user));
+        usersRepository.findByEmail.mockResolvedValue(userWithHashedPassword);
 
         authenticateUserUseCase = new AuthenticateUserUseCase(
             usersRepository,
@@ -36,18 +34,17 @@ describe('[UT] - Authenticate User', () => {
         );
 
         const result = await authenticateUserUseCase.execute({
-            email: 'johndoe@example.com',
-            password: '123456',
+            email: user.email,
+            password: user.password,
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual({
             accessToken: expect.any(String),
         });
     });
 
     it('should return a message error when provide wrong email', async () => {
-        const usersRepository = MockRepository();
         authenticateUserUseCase = new AuthenticateUserUseCase(
             usersRepository,
             fakeHasher,
@@ -55,24 +52,19 @@ describe('[UT] - Authenticate User', () => {
         );
 
         const result = await authenticateUserUseCase.execute({
-            email: 'johndoe@example.com',
+            email: 'email@example.com',
             password: '123456',
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(WrongCredentialsError);
     });
 
     it('should return a message error when provide wrong password', async () => {
-        const usersRepository = MockRepository();
+        const user = FakeUserFactory.create();
+        const userWrongPassword = FakeUserFactory.create({ password: 'xxxx' });
 
-        const user = new User({
-            name: 'John Doe',
-            email: 'johndoe@example.com',
-            password: await fakeHasher.hash('123456'),
-        });
-
-        usersRepository.findByEmail.mockReturnValue(Promise.resolve(user));
+        usersRepository.findByEmail.mockResolvedValue(user);
 
         authenticateUserUseCase = new AuthenticateUserUseCase(
             usersRepository,
@@ -81,11 +73,11 @@ describe('[UT] - Authenticate User', () => {
         );
 
         const result = await authenticateUserUseCase.execute({
-            email: 'johndoe@example.com',
-            password: '654321',
+            email: userWrongPassword.email,
+            password: userWrongPassword.password,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(WrongCredentialsError);
     });
 });

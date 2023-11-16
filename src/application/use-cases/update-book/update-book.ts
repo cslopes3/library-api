@@ -46,7 +46,10 @@ export class UpdateBookUseCase {
 
         const bookWithSameName = await this.booksRepository.findByName(name);
 
-        if (bookWithSameName && bookWithSameName.id !== book.id) {
+        if (
+            bookWithSameName &&
+            bookWithSameName.id.toString() !== book.id.toString()
+        ) {
             return left(new BookAlreadyExistsError(name));
         }
 

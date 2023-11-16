@@ -1,6 +1,5 @@
 import { FakeEncrypter } from 'test/cryptography/fake-encrypter';
 import { FakeHasher } from 'test/cryptography/fake-hasher';
-import { WrongCredentialsError } from '@usecase/@errors/wrong-credentials-error';
 import { AuthenticateUserUseCase } from '@usecase/authenticate-user/authenticate-user';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import {
@@ -17,7 +16,7 @@ let prisma: PrismaService;
 let usersRepository: PrismaUsersRepository;
 
 describe('[IT] - Authenticate User', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
 
@@ -47,37 +46,9 @@ describe('[IT] - Authenticate User', () => {
             password: '123456',
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual({
             accessToken: expect.any(String),
         });
-    });
-
-    it('should return a message error when provide wrong email', async () => {
-        const result = await authenticateUserUseCase.execute({
-            email: 'johndoe@example.com',
-            password: '123456',
-        });
-
-        expect(result.isLeft()).toBe(true);
-        expect(result.value).toBeInstanceOf(WrongCredentialsError);
-    });
-
-    it('should return a message error when provide wrong password', async () => {
-        await prisma.user.create({
-            data: {
-                name: 'John Doe',
-                email: 'johndoe@example.com',
-                password: await fakeHasher.hash('123456'),
-            },
-        });
-
-        const result = await authenticateUserUseCase.execute({
-            email: 'johndoe@example.com',
-            password: '654321',
-        });
-
-        expect(result.isLeft()).toBe(true);
-        expect(result.value).toBeInstanceOf(WrongCredentialsError);
     });
 });

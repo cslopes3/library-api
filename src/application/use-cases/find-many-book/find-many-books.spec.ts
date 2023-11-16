@@ -1,84 +1,22 @@
-import { Book } from '@domain/entities/book';
-import { BookAuthors } from '@domain/value-objects/book-authors';
-import { BookEdition } from '@domain/value-objects/book-edition';
+import { FakeBookFactory } from 'test/factories/fake-book-factory';
 import { FindManyBooksUseCase } from './find-many-books';
-import { BookPublisher } from '@domain/value-objects/book-publisher';
+import { BooksMockRepository } from '@mocks/mock-books-repository';
 
-const book: Book[] = [];
-
-book.push(
-    new Book(
-        {
-            name: 'Book 1',
-            authors: [
-                new BookAuthors('1', 'Author 1'),
-                new BookAuthors('2', 'Author 2'),
-            ],
-            publisher: new BookPublisher('1', 'Publisher 1'),
-            edition: new BookEdition(3, 'Book 1 description', 2023),
-            quantity: 3,
-            available: 3,
-            pages: 200,
-        },
-        '1',
-        new Date(2023, 0, 1),
-    ),
-);
-
-book.push(
-    new Book(
-        {
-            name: 'Book 2',
-            authors: [
-                new BookAuthors('1', 'Author 1'),
-                new BookAuthors('2', 'Author 2'),
-            ],
-            publisher: new BookPublisher('1', 'Publisher 1'),
-            edition: new BookEdition(3, 'Book 2 description', 2023),
-            quantity: 3,
-            available: 3,
-            pages: 200,
-        },
-        '1',
-        new Date(2023, 0, 10),
-    ),
-);
-
-book.push(
-    new Book(
-        {
-            name: 'Book 3',
-            authors: [
-                new BookAuthors('1', 'Author 1'),
-                new BookAuthors('2', 'Author 2'),
-            ],
-            publisher: new BookPublisher('1', 'Publisher 1'),
-            edition: new BookEdition(3, 'Book 3 description', 2023),
-            quantity: 3,
-            available: 3,
-            pages: 200,
-        },
-        '1',
-        new Date(2023, 0, 20),
-    ),
-);
-
-const MockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn().mockReturnValue(Promise.resolve(book)),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        addBookToStock: vi.fn(),
-        removeBookFromStock: vi.fn(),
-    };
-};
+let booksRepository: ReturnType<typeof BooksMockRepository>;
 
 describe('[UT] - Find many books use case', () => {
+    beforeEach(() => {
+        booksRepository = BooksMockRepository();
+    });
+
     it('should find many books', async () => {
-        const booksRepository = MockRepository();
+        const books = [
+            FakeBookFactory.create(),
+            FakeBookFactory.create({ name: 'Book 2' }, '2'),
+            FakeBookFactory.create({ name: 'Book 3' }, '3'),
+        ];
+
+        booksRepository.findMany.mockResolvedValue(books);
         const findManyBooksUseCase = new FindManyBooksUseCase(booksRepository);
 
         const result = await findManyBooksUseCase.execute({
@@ -87,37 +25,31 @@ describe('[UT] - Find many books use case', () => {
             },
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toHaveLength(3);
         expect(result.value).toEqual([
             expect.objectContaining({
-                name: 'Book 1',
-                createdAt: new Date(2023, 0, 1),
+                name: books[0].name,
             }),
             expect.objectContaining({
-                name: 'Book 2',
-                createdAt: new Date(2023, 0, 10),
+                name: books[1].name,
             }),
             expect.objectContaining({
-                name: 'Book 3',
-                createdAt: new Date(2023, 0, 20),
+                name: books[2].name,
             }),
         ]);
     });
 
     it('should return an empty array when not found a book', async () => {
-        const booksRepository = MockRepository();
-        booksRepository.findMany.mockReturnValue(Promise.resolve([]));
+        booksRepository.findMany.mockResolvedValue([]);
 
         const findManyBooksUseCase = new FindManyBooksUseCase(booksRepository);
 
         const result = await findManyBooksUseCase.execute({
-            params: {
-                page: 2,
-            },
+            params: { page: 1 },
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toHaveLength(0);
     });
 });

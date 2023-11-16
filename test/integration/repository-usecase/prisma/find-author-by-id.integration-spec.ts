@@ -11,7 +11,7 @@ let authorsRepository: PrismaAuthorsRepository;
 let findAuthorByIdUseCase: FindAuthorByIdUseCase;
 
 describe('[IT] - Find author by id use case', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
 
@@ -21,7 +21,6 @@ describe('[IT] - Find author by id use case', () => {
 
     afterEach(async () => {
         await stopEnvironment(prisma);
-        authorsRepository = new PrismaAuthorsRepository(prisma);
     });
 
     it('should find an author', async () => {
@@ -34,16 +33,16 @@ describe('[IT] - Find author by id use case', () => {
             data: author,
         });
 
-        const result = await findAuthorByIdUseCase.execute({ id: '1' });
+        const result = await findAuthorByIdUseCase.execute({ id: author.id });
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value?.name).toBe('Author 1');
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value?.name).toBe(author.name);
     });
 
     it('should return null when a author is not find', async () => {
         const result = await findAuthorByIdUseCase.execute({ id: '1' });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toBeNull();
     });
 });

@@ -30,5 +30,5 @@ export async function stopEnvironment(prisma: PrismaClient) {
         `DROP SCHEMA IF EXISTS "${schemaId}" CASCADE`,
     );
 
-    await prisma.$disconnect;
+    prisma.$disconnect;
 }

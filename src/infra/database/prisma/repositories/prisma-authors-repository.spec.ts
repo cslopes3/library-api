@@ -1,16 +1,16 @@
-import { Author } from '@domain/entities/author';
 import { PrismaAuthorsRepository } from './prisma-authors-repository';
 import {
     startEnvironment,
     stopEnvironment,
 } from 'test/utils/test-environment-setup';
 import { PrismaService } from '../prisma.service';
+import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
 
 let prisma: PrismaService;
 let authorsRepository: PrismaAuthorsRepository;
 
 describe('[UT] - Authors repository', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         authorsRepository = new PrismaAuthorsRepository(prisma);
@@ -20,10 +20,10 @@ describe('[UT] - Authors repository', () => {
         await stopEnvironment(prisma);
     });
 
-    it('should create a author', async () => {
+    it('should create an author', async () => {
         vi.spyOn(prisma.author, 'create');
 
-        const author = new Author({ name: 'Name 1' });
+        const author = FakeAuthorFactory.create();
 
         await authorsRepository.create(author);
 
@@ -39,10 +39,10 @@ describe('[UT] - Authors repository', () => {
         await prisma.author.createMany({
             data: [
                 {
-                    name: 'Name 1',
+                    name: 'Author 1',
                 },
                 {
-                    name: 'Name 2',
+                    name: 'Author 2',
                 },
             ],
         });
@@ -50,8 +50,8 @@ describe('[UT] - Authors repository', () => {
         const result = await authorsRepository.findMany({ page: 1 });
 
         expect(result).toHaveLength(2);
-        expect(result![0].name).toEqual('Name 1');
-        expect(result![1].name).toEqual('Name 2');
+        expect(result![0].name).toEqual('Author 1');
+        expect(result![1].name).toEqual('Author 2');
     });
 
     it('should return an empty array when not found an author at findMany', async () => {
@@ -64,13 +64,13 @@ describe('[UT] - Authors repository', () => {
         await prisma.author.create({
             data: {
                 id: '1',
-                name: 'Name 1',
+                name: 'Author 1',
             },
         });
 
         const result = await authorsRepository.findById('1');
 
-        expect(result?.name).toEqual('Name 1');
+        expect(result?.name).toEqual('Author 1');
     });
 
     it('should return null when not found an author by id', async () => {
@@ -82,32 +82,32 @@ describe('[UT] - Authors repository', () => {
     it('should find an author by name', async () => {
         await prisma.author.create({
             data: {
-                name: 'Name 1',
+                name: 'Author 1',
             },
         });
 
-        const result = await authorsRepository.findByName('Name 1');
+        const result = await authorsRepository.findByName('Author 1');
 
-        expect(result?.name).toEqual('Name 1');
+        expect(result?.name).toEqual('Author 1');
     });
 
     it('should return null when not found an author by name', async () => {
-        const result = await authorsRepository.findByName('Name 1');
+        const result = await authorsRepository.findByName('Author 1');
 
         expect(result).toBeNull();
     });
 
-    it('should update a author', async () => {
+    it('should update an author', async () => {
         vi.spyOn(prisma.author, 'update');
 
         await prisma.author.create({
             data: {
                 id: '1',
-                name: 'Name 1',
+                name: 'Author 1',
             },
         });
 
-        const author = new Author({ name: 'Name 1' });
+        const author = FakeAuthorFactory.create();
 
         await authorsRepository.update(author);
 
@@ -122,13 +122,13 @@ describe('[UT] - Authors repository', () => {
         });
     });
 
-    it('should delete a author', async () => {
+    it('should delete an author', async () => {
         vi.spyOn(prisma.author, 'delete');
 
         await prisma.author.create({
             data: {
                 id: '1',
-                name: 'Name 1',
+                name: 'Author 1',
             },
         });
 
@@ -146,11 +146,11 @@ describe('[UT] - Authors repository', () => {
             data: [
                 {
                     id: '1',
-                    name: 'Name 1',
+                    name: 'Author 1',
                 },
                 {
                     id: '2',
-                    name: 'Name 2',
+                    name: 'Author 2',
                 },
             ],
         });

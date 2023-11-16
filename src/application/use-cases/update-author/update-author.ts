@@ -28,7 +28,10 @@ export class UpdateAuthorUseCase {
         const authorWithSameName =
             await this.authorsRepository.findByName(name);
 
-        if (authorWithSameName && authorWithSameName.id !== author.id) {
+        if (
+            authorWithSameName &&
+            authorWithSameName.id.toString() !== author.id.toString()
+        ) {
             return left(new AuthorAlreadyExistsError(name));
         }
 

@@ -1,8 +1,8 @@
-export interface FindReservationByUserIdInputDto {
+export interface FindReservationsByUserIdInputDto {
     userId: string;
 }
 
-export interface FindReservationByUserIdOutputDto {
+export interface FindReservationsByUserIdOutputDto {
     id: string;
     userId: string;
     reservationItems: {

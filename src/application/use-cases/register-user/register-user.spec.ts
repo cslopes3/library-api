@@ -1,38 +1,32 @@
 import { FakeHasher } from 'test/cryptography/fake-hasher';
 import { RegisterUserUseCase } from './register-user';
 import { UserAlreadyExistsError } from '@usecase/@errors/user-already-exists-error';
-import { User } from '@domain/entities/user';
+import { UsersMockRepository } from '@mocks/mock-users-repository';
+import { FakeUserFactory } from 'test/factories/fake-user-factory';
 
-const MockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByEmail: vi.fn(),
-        create: vi.fn(),
-    };
-};
-
-const fakeHasher: FakeHasher = new FakeHasher();
+let usersRepository: ReturnType<typeof UsersMockRepository>;
+let fakeHasher: FakeHasher;
 
 let registerUserUseCase: RegisterUserUseCase;
 
 describe('[UT] - Register user', () => {
+    beforeEach(() => {
+        usersRepository = UsersMockRepository();
+        fakeHasher = new FakeHasher();
+    });
+
     it('should be able to register a new user', async () => {
-        const usersRepository = MockRepository();
+        const user = FakeUserFactory.create();
+
         registerUserUseCase = new RegisterUserUseCase(
             usersRepository,
             fakeHasher,
         );
 
-        const user = {
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: '123456',
-        };
-
         const result = await registerUserUseCase.execute(user);
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: expect.any(String),
             name: user.name,
             email: user.email,
@@ -43,14 +37,9 @@ describe('[UT] - Register user', () => {
     });
 
     it('should return a message error when user already exists', async () => {
-        const user = new User({
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: '123456',
-        });
+        const user = FakeUserFactory.create();
 
-        const usersRepository = MockRepository();
-        usersRepository.findByEmail.mockReturnValue(Promise.resolve(user));
+        usersRepository.findByEmail.mockResolvedValue(user);
 
         registerUserUseCase = new RegisterUserUseCase(
             usersRepository,
@@ -58,33 +47,32 @@ describe('[UT] - Register user', () => {
         );
 
         const result = await registerUserUseCase.execute({
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: '123456',
+            name: user.name,
+            email: user.email,
+            password: user.password,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(UserAlreadyExistsError);
     });
 
     it('should hash user password upon registration', async () => {
-        const usersRepository = MockRepository();
+        const user = FakeUserFactory.create();
+
         registerUserUseCase = new RegisterUserUseCase(
             usersRepository,
             fakeHasher,
         );
 
-        const user = {
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: '123456',
-        };
+        const result = await registerUserUseCase.execute({
+            name: user.name,
+            email: user.email,
+            password: user.password,
+        });
 
-        const result = await registerUserUseCase.execute(user);
+        const hashedPassword = await fakeHasher.hash(user.password);
 
-        const hashedPassword = await fakeHasher.hash('123456');
-
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual(
             expect.objectContaining({
                 password: hashedPassword,

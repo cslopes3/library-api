@@ -1,28 +1,19 @@
-import { Publisher } from '@domain/entities/publisher';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { DeletePublisherUseCase } from './delete-publisher';
+import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
+import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
 
-const publisher = new Publisher(
-    {
-        name: 'Updated Name',
-    },
-    '1',
-);
-
-const MockRepository = () => {
-    return {
-        findById: vi.fn().mockReturnValue(Promise.resolve(publisher)),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-    };
-};
+let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
 describe('[UT] - Delete publisher use case', () => {
+    beforeEach(() => {
+        publishersRepository = PublishersMockRepository();
+    });
+
     it('should delete publisher', async () => {
-        const publishersRepository = MockRepository();
+        const publisher = FakePublisherFactory.create();
+        publishersRepository.findById.mockResolvedValue(publisher);
+
         const deletePublisherUseCase = new DeletePublisherUseCase(
             publishersRepository,
         );
@@ -31,13 +22,11 @@ describe('[UT] - Delete publisher use case', () => {
             id: publisher.id.toString(),
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
     });
 
     it('should return error when publisher is not found', async () => {
-        const publishersRepository = MockRepository();
-        publishersRepository.findById.mockReturnValue(Promise.resolve(null));
-
+        const publisher = FakePublisherFactory.create();
         const deletePublisherUseCase = new DeletePublisherUseCase(
             publishersRepository,
         );
@@ -46,7 +35,7 @@ describe('[UT] - Delete publisher use case', () => {
             id: publisher.id.toString(),
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
     });
 });

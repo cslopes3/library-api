@@ -1,51 +1,29 @@
-import { Schedule, ScheduleStatus } from '@domain/entities/schedule';
-import { ScheduleItem } from '@domain/value-objects/schedule-item';
-import { User } from '@domain/entities/user';
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { FindLastThirtyScheduleByUserIdUseCase } from './find-last-thirty-days-schedule-by-user-id';
+import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
+import { UsersMockRepository } from '@mocks/mock-users-repository';
+import { FakeUserFactory } from 'test/factories/fake-user-factory';
+import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
 
-const schedule = new Schedule(
-    {
-        date: new Date(),
-        userId: '1',
-        scheduleItems: [new ScheduleItem('1', 'Book 1')],
-        status: ScheduleStatus.pending,
-    },
-    '1',
-);
-
-const SchedulesMockRepository = () => {
-    return {
-        create: vi.fn(),
-        findById: vi.fn(),
-        findByUserIdAndLastDays: vi
-            .fn()
-            .mockReturnValue(Promise.resolve([schedule])),
-        changeStatus: vi.fn(),
-    };
-};
-
-const user = new User(
-    {
-        name: 'Name 1',
-        email: 'email@email.com',
-        password: '123456',
-    },
-    '1',
-);
-
-const UsersMockRepository = () => {
-    return {
-        findById: vi.fn().mockReturnValue(Promise.resolve(user)),
-        findByEmail: vi.fn(),
-        create: vi.fn(),
-    };
-};
+let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
+let usersRepository: ReturnType<typeof UsersMockRepository>;
 
 describe('[UT] - Find last thirty days schedule by user id', () => {
+    beforeEach(() => {
+        schedulesRepository = SchedulesMockRepository();
+        usersRepository = UsersMockRepository();
+    });
+
     it('should find a schedule by user id', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const usersRepository = UsersMockRepository();
+        const user = FakeUserFactory.create();
+        const schedule = [
+            FakeScheduleFactory.create({
+                userId: user.id.toString(),
+            }),
+        ];
+
+        schedulesRepository.findByUserIdAndLastDays.mockResolvedValue(schedule);
+        usersRepository.findById.mockResolvedValue(user);
 
         const findLastThirtyScheduleByUserIdUseCase =
             new FindLastThirtyScheduleByUserIdUseCase(
@@ -54,20 +32,20 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
             );
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
-            userId: '1',
+            userId: user.id.toString(),
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual([
             {
                 id: expect.any(String),
-                date: schedule.date,
-                userId: schedule.userId,
+                date: schedule[0].date,
+                userId: schedule[0].userId,
                 scheduleItems: [
                     expect.objectContaining({
                         id: expect.any(String),
-                        bookId: schedule.scheduleItems[0].bookId,
-                        name: schedule.scheduleItems[0].name,
+                        bookId: schedule[0].scheduleItems[0].bookId,
+                        name: schedule[0].scheduleItems[0].name,
                     }),
                 ],
                 status: expect.any(String),
@@ -78,11 +56,6 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
     });
 
     it('should return a message error when user is not found', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const usersRepository = UsersMockRepository();
-
-        usersRepository.findById.mockReturnValue(Promise.resolve(null));
-
         const findLastThirtyScheduleByUserIdUseCase =
             new FindLastThirtyScheduleByUserIdUseCase(
                 schedulesRepository,
@@ -93,17 +66,15 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
             userId: '1',
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(UserDoesNotExistsError);
     });
 
     it('should return an empty array when not found a schedule', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const usersRepository = UsersMockRepository();
+        const user = FakeUserFactory.create();
 
-        schedulesRepository.findByUserIdAndLastDays.mockReturnValue(
-            Promise.resolve([]),
-        );
+        schedulesRepository.findByUserIdAndLastDays.mockResolvedValue([]);
+        usersRepository.findById.mockResolvedValue(user);
 
         const findLastThirtyScheduleByUserIdUseCase =
             new FindLastThirtyScheduleByUserIdUseCase(
@@ -112,10 +83,10 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
             );
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
-            userId: '1',
+            userId: user.id.toString(),
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toHaveLength(0);
     });
 });

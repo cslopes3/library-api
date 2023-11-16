@@ -1,52 +1,38 @@
-import { Author } from '@domain/entities/author';
 import { FindAuthorByIdUseCase } from './find-author-by-id';
+import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
+import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
 
-const MockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        validateManyIds: vi.fn(),
-    };
-};
+let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
 describe('[UT] - Find author by id use case', () => {
+    beforeEach(() => {
+        authorsRepository = AuthorsMockRepository();
+    });
+
     it('should find an author', async () => {
-        const authorsRepository = MockRepository();
-
-        const author = new Author(
-            {
-                name: 'Author 1',
-            },
-            '1',
-        );
-
-        authorsRepository.findById.mockReturnValue(Promise.resolve(author));
+        const author = FakeAuthorFactory.create();
+        authorsRepository.findById.mockResolvedValue(author);
 
         const findAuthorByIdUseCase = new FindAuthorByIdUseCase(
             authorsRepository,
         );
 
-        const result = await findAuthorByIdUseCase.execute({ id: '1' });
+        const result = await findAuthorByIdUseCase.execute({
+            id: author.id.toString(),
+        });
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value?.name).toBe('Author 1');
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value?.name).toBe(author.name);
     });
 
     it('should return null when a author is not find', async () => {
-        const authorsRepository = MockRepository();
-        authorsRepository.findById.mockReturnValue(Promise.resolve(null));
-
         const findAuthorByIdUseCase = new FindAuthorByIdUseCase(
             authorsRepository,
         );
 
         const result = await findAuthorByIdUseCase.execute({ id: '1' });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toBeNull();
     });
 });

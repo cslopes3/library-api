@@ -49,7 +49,6 @@ export class PrismaReservationsRepository implements ReservationsRepository {
                 reservationItems: {
                     create: data.reservationItems.map((item) => ({
                         id: item.id,
-                        reservationId: data.id,
                         bookId: item.bookId,
                         name: item.name,
                         expirationDate: item.expirationDate,
@@ -62,12 +61,22 @@ export class PrismaReservationsRepository implements ReservationsRepository {
     }
 
     async delete(id: string): Promise<void> {
+        const items = await this.prisma.reservationItem.findMany({
+            where: {
+                reservationId: id,
+            },
+        });
+
+        const itemsId = items.map((item) => item.id);
+        await this.prisma.reservationItem.deleteMany({
+            where: {
+                id: { in: itemsId },
+            },
+        });
+
         await this.prisma.reservation.delete({
             where: {
                 id,
-            },
-            include: {
-                reservationItems: true,
             },
         });
     }

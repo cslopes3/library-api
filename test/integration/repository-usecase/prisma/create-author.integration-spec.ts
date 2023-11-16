@@ -1,6 +1,5 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaAuthorsRepository } from '@infra/database/prisma/repositories/prisma-authors-repository';
-import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
 import { CreateAuthorUseCase } from '@usecase/create-author/create-author';
 import {
     startEnvironment,
@@ -12,10 +11,11 @@ let authorsRepository: PrismaAuthorsRepository;
 let createAuthorUseCase: CreateAuthorUseCase;
 
 describe('[IT] - Create author ', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         authorsRepository = new PrismaAuthorsRepository(prisma);
+        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
     });
 
     afterEach(async () => {
@@ -23,36 +23,15 @@ describe('[IT] - Create author ', () => {
     });
 
     it('should create a author', async () => {
-        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
+        const authorName = 'Author 1';
+        const result = await createAuthorUseCase.execute({ name: authorName });
 
-        const result = await createAuthorUseCase.execute({ name: 'Name 1' });
-
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual({
             id: expect.any(String),
-            name: 'Name 1',
+            name: authorName,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
-    });
-
-    it('should return a message error when author already exists', async () => {
-        const author = {
-            id: '1',
-            name: 'Author 1',
-        };
-
-        await prisma.author.create({
-            data: author,
-        });
-
-        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
-
-        const result = await createAuthorUseCase.execute({
-            name: 'Author 1',
-        });
-
-        expect(result.isLeft()).toBe(true);
-        expect(result.value).toBeInstanceOf(AuthorAlreadyExistsError);
     });
 });

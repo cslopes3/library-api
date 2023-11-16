@@ -1,58 +1,28 @@
-import { Schedule, ScheduleStatus } from '@domain/entities/schedule';
-import { ScheduleItem } from '@domain/value-objects/schedule-item';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { ConfirmOrChangeScheduleStatusUseCase } from './confirm-or-change-schedule-status';
 import { CantChangeStatusError } from '@usecase/@errors/cant-change-status-error';
+import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
+import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
+import { BooksMockRepository } from '@mocks/mock-books-repository';
+import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
+import { ScheduleStatus } from '@domain/entities/schedule';
 
-const schedule = new Schedule(
-    {
-        date: new Date(),
-        userId: '1',
-        scheduleItems: [new ScheduleItem('1', 'Book 1')],
-        status: ScheduleStatus.pending,
-    },
-    '1',
-);
-
-const SchedulesMockRepository = () => {
-    return {
-        create: vi.fn(),
-        findById: vi.fn().mockReturnValue(Promise.resolve(schedule)),
-        findByUserIdAndLastDays: vi.fn(),
-        changeStatus: vi.fn(),
-    };
-};
-
-const ReservationsMockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByUserId: vi.fn().mockReturnValue(Promise.resolve([])),
-        delete: vi.fn(),
-        create: vi.fn(),
-        changeReservationInfoById: vi.fn(),
-        returnByItemId: vi.fn(),
-        findItemById: vi.fn(),
-    };
-};
-
-const BooksMockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        addBookToStock: vi.fn(),
-        removeBookFromStock: vi.fn(),
-    };
-};
+let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
+let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
+let booksRepository: ReturnType<typeof BooksMockRepository>;
 
 describe('[UT] - Confirm or change schedule status', () => {
+    beforeEach(() => {
+        schedulesRepository = SchedulesMockRepository();
+        reservationsRepository = ReservationsMockRepository();
+        booksRepository = BooksMockRepository();
+    });
+
     it('should be able to change status', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
+        const schedule = FakeScheduleFactory.create();
+
+        reservationsRepository.findByUserId.mockResolvedValue([]);
+        schedulesRepository.findById.mockResolvedValue(schedule);
 
         vi.spyOn(booksRepository, 'addBookToStock');
 
@@ -64,32 +34,21 @@ describe('[UT] - Confirm or change schedule status', () => {
             );
 
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
-            id: '1',
+            id: schedule.id.toString(),
             status: 'canceled',
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(booksRepository.addBookToStock).toHaveBeenCalledOnce();
     });
 
     it('should not be able to change status if it is not pending', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
+        const notPendingSchedule = FakeScheduleFactory.create({
+            status: ScheduleStatus.canceled,
+        });
 
-        const notPendingSchedule = new Schedule(
-            {
-                date: new Date(),
-                userId: '1',
-                scheduleItems: [new ScheduleItem('1', 'Book 1')],
-                status: ScheduleStatus.canceled,
-            },
-            '1',
-        );
-
-        schedulesRepository.findById.mockReturnValue(
-            Promise.resolve(notPendingSchedule),
-        );
+        reservationsRepository.findByUserId.mockResolvedValue([]);
+        schedulesRepository.findById.mockResolvedValue(notPendingSchedule);
 
         const confirmOrChangeScheduleStatusUseCase =
             new ConfirmOrChangeScheduleStatusUseCase(
@@ -99,18 +58,19 @@ describe('[UT] - Confirm or change schedule status', () => {
             );
 
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
-            id: '1',
+            id: notPendingSchedule.id.toString(),
             status: 'canceled',
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(CantChangeStatusError);
     });
 
     it('should be able to confirm a schedule', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
+        const schedule = FakeScheduleFactory.create();
+
+        reservationsRepository.findByUserId.mockResolvedValue([]);
+        schedulesRepository.findById.mockResolvedValue(schedule);
 
         const confirmOrChangeScheduleStatusUseCase =
             new ConfirmOrChangeScheduleStatusUseCase(
@@ -122,25 +82,18 @@ describe('[UT] - Confirm or change schedule status', () => {
         vi.spyOn(reservationsRepository, 'create');
 
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
-            id: '1',
+            id: schedule.id.toString(),
             status: 'finished',
         });
 
-        // const reservation = new Reservation({
-        //     userId: schedule.userId,
-        //     reservationItem: [
-        //         new ReservationItem('1', 'Book 1', new Date(), false, false),
-        //     ],
-        // });
-
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(reservationsRepository.create).toHaveBeenCalledWith(
             expect.objectContaining({
                 userId: schedule.userId,
                 reservationItem: [
                     expect.objectContaining({
-                        bookId: '1',
-                        name: 'Book 1',
+                        bookId: schedule.scheduleItems[0].bookId,
+                        name: schedule.scheduleItems[0].name,
                         expirationDate: expect.any(Date),
                     }),
                 ],
@@ -149,11 +102,7 @@ describe('[UT] - Confirm or change schedule status', () => {
     });
 
     it('should return error when schedule is not found', async () => {
-        const schedulesRepository = SchedulesMockRepository();
-        const reservationsRepository = ReservationsMockRepository();
-        const booksRepository = BooksMockRepository();
-
-        schedulesRepository.findById.mockReturnValue(Promise.resolve(null));
+        reservationsRepository.findByUserId.mockResolvedValue([]);
 
         const confirmOrChangeScheduleStatusUseCase =
             new ConfirmOrChangeScheduleStatusUseCase(
@@ -167,7 +116,7 @@ describe('[UT] - Confirm or change schedule status', () => {
             status: 'finished',
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
     });
 });

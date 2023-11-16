@@ -1,13 +1,13 @@
 import { ReservationsRepository } from '@repository/reservations-repository';
 import { UsersRepository } from '@repository/users-repository';
 import {
-    FindReservationByUserIdInputDto,
-    FindReservationByUserIdOutputDto,
-} from './find-reservation-by-user-id-dto';
+    FindReservationsByUserIdInputDto,
+    FindReservationsByUserIdOutputDto,
+} from './find-reservations-by-user-id-dto';
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { Either, left, right } from '@shared/errors/either';
 
-export class FindReservationByUserIdUseCase {
+export class FindReservationsByUserIdUseCase {
     constructor(
         private reservationsRepository: ReservationsRepository,
         private usersRepository: UsersRepository,
@@ -15,8 +15,8 @@ export class FindReservationByUserIdUseCase {
 
     async execute({
         userId,
-    }: FindReservationByUserIdInputDto): Promise<
-        Either<UserDoesNotExistsError, FindReservationByUserIdOutputDto[] | []>
+    }: FindReservationsByUserIdInputDto): Promise<
+        Either<UserDoesNotExistsError, FindReservationsByUserIdOutputDto[] | []>
     > {
         const user = await this.usersRepository.findById(userId);
 

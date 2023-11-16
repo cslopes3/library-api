@@ -19,7 +19,6 @@ export class PrismaSchedulesRepository implements SchedulesRepository {
                 scheduleItems: {
                     create: data.scheduleItems.map((item) => ({
                         id: item.id,
-                        scheduleId: data.id,
                         bookId: item.bookId,
                         name: item.name,
                     })),

@@ -30,7 +30,7 @@ export class UpdatePublisherUseCase {
 
         if (
             publisherWithSameName &&
-            publisherWithSameName.id !== publisher.id
+            publisherWithSameName.id.toString() !== publisher.id.toString()
         ) {
             return left(new PublisherAlreadyExistsError(name));
         }

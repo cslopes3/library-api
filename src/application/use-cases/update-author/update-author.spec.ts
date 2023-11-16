@@ -1,80 +1,65 @@
-import { Author } from '@domain/entities/author';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { UpdateAuthorUseCase } from './update-author';
 import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
+import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
+import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
 
-const author = new Author(
-    {
-        name: 'Updated Name',
-    },
-    '1',
-);
-
-const MockRepository = () => {
-    return {
-        findById: vi.fn().mockReturnValue(Promise.resolve(author)),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn().mockReturnValue(Promise.resolve(author)),
-        delete: vi.fn(),
-        validateManyIds: vi.fn(),
-    };
-};
+let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
 describe('[UT] - Update author use case', () => {
+    beforeEach(() => {
+        authorsRepository = AuthorsMockRepository();
+    });
+
     it('should update author', async () => {
-        const authorsRepository = MockRepository();
+        const author = FakeAuthorFactory.create();
+        const updatedName = 'Updated Author';
+        authorsRepository.findById.mockResolvedValue(author);
+
         const updateAuthorUseCase = new UpdateAuthorUseCase(authorsRepository);
 
         const result = await updateAuthorUseCase.execute({
-            id: '1',
-            name: 'Updated Name',
+            id: author.id.toString(),
+            name: updatedName,
         });
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: author.id.toString(),
-            name: 'Updated Name',
+            name: updatedName,
             createdAt: author.createdAt,
             updatedAt: expect.any(Date),
         });
     });
 
     it('should return error when author is not found', async () => {
-        const authorsRepository = MockRepository();
-        authorsRepository.findById.mockReturnValue(Promise.resolve(null));
-
+        const updatedName = 'Updated Author';
         const updateAuthorUseCase = new UpdateAuthorUseCase(authorsRepository);
 
         const result = await updateAuthorUseCase.execute({
             id: '1',
-            name: 'Updated Name',
+            name: updatedName,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
     });
 
     it('should return a message error when author already exists', async () => {
-        const author = new Author(
-            {
-                name: 'Name 1',
-            },
-            '1',
-        );
+        const author = FakeAuthorFactory.create();
+        const authorWithSameName = FakeAuthorFactory.create({}, '2');
 
-        const authorsRepository = MockRepository();
-        authorsRepository.findByName.mockReturnValue(Promise.resolve(author));
+        authorsRepository.findById.mockResolvedValue(author);
+        authorsRepository.findByName.mockResolvedValue(authorWithSameName);
 
         const updateAuthorUseCase = new UpdateAuthorUseCase(authorsRepository);
 
         const result = await updateAuthorUseCase.execute({
-            id: '2',
-            name: 'Name 1',
+            id: authorWithSameName.id.toString(),
+            name: author.name,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(AuthorAlreadyExistsError);
     });
 });

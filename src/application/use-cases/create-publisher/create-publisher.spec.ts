@@ -1,59 +1,49 @@
-import { Publisher } from '@domain/entities/publisher';
+import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
 import { CreatePublisherUseCase } from './create-publisher';
 import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
+import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
 
-const MockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-    };
-};
-
-let createPublisherUseCase: CreatePublisherUseCase;
+let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
 describe('[UT] - Create publisher use case', () => {
+    beforeEach(() => {
+        publishersRepository = PublishersMockRepository();
+    });
+
     it('should create a publisher', async () => {
-        const publishersRepository = MockRepository();
-        createPublisherUseCase = new CreatePublisherUseCase(
+        const publisher = FakePublisherFactory.create();
+
+        const createPublisherUseCase = new CreatePublisherUseCase(
             publishersRepository,
         );
 
         const result = await createPublisherUseCase.execute({
-            name: 'Name 1',
+            name: publisher.name,
         });
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: expect.any(String),
-            name: 'Name 1',
+            name: publisher.name,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
     });
 
     it('should return a message error when publisher already exists', async () => {
-        const publisher = new Publisher({
-            name: 'Name 1',
-        });
+        const publisher = FakePublisherFactory.create();
 
-        const publishersRepository = MockRepository();
-        publishersRepository.findByName.mockReturnValue(
-            Promise.resolve(publisher),
-        );
+        publishersRepository.findByName.mockResolvedValue(publisher);
 
-        createPublisherUseCase = new CreatePublisherUseCase(
+        const createPublisherUseCase = new CreatePublisherUseCase(
             publishersRepository,
         );
 
         const result = await createPublisherUseCase.execute({
-            name: 'Name 1',
+            name: publisher.name,
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(PublisherAlreadyExistsError);
     });
 });

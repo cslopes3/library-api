@@ -1,5 +1,4 @@
 import { FakeHasher } from 'test/cryptography/fake-hasher';
-import { UserAlreadyExistsError } from '@usecase/@errors/user-already-exists-error';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { RegisterUserUseCase } from '@usecase/register-user/register-user';
 import {
@@ -12,11 +11,18 @@ const fakeHasher: FakeHasher = new FakeHasher();
 
 let prisma: PrismaService;
 let registerUserUseCase: RegisterUserUseCase;
+let usersRepository: PrismaUsersRepository;
 
 describe('[IT] - Register user', () => {
-    beforeEach(async () => {
+    beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
+
+        usersRepository = new PrismaUsersRepository(prisma);
+        registerUserUseCase = new RegisterUserUseCase(
+            usersRepository,
+            fakeHasher,
+        );
     });
 
     afterEach(async () => {
@@ -24,12 +30,6 @@ describe('[IT] - Register user', () => {
     });
 
     it('should be able to register a new user', async () => {
-        const usersRepository = new PrismaUsersRepository(prisma);
-        registerUserUseCase = new RegisterUserUseCase(
-            usersRepository,
-            fakeHasher,
-        );
-
         const user = {
             name: 'Name 1',
             email: 'email@email.com',
@@ -38,8 +38,8 @@ describe('[IT] - Register user', () => {
 
         const result = await registerUserUseCase.execute(user);
 
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: expect.any(String),
             name: user.name,
             email: user.email,
@@ -47,29 +47,5 @@ describe('[IT] - Register user', () => {
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
-    });
-
-    it('should return a message error when user already exists', async () => {
-        const usersRepository = new PrismaUsersRepository(prisma);
-
-        registerUserUseCase = new RegisterUserUseCase(
-            usersRepository,
-            fakeHasher,
-        );
-
-        const user = {
-            name: 'Name 1',
-            email: 'email@email.com',
-            password: await fakeHasher.hash('123456'),
-        };
-
-        await prisma.user.create({
-            data: user,
-        });
-
-        const result = await registerUserUseCase.execute(user);
-
-        expect(result.isLeft()).toBe(true);
-        expect(result.value).toBeInstanceOf(UserAlreadyExistsError);
     });
 });

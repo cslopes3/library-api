@@ -1,36 +1,27 @@
-import { Schedule, ScheduleStatus } from '@domain/entities/schedule';
-import { ScheduleItem } from '@domain/value-objects/schedule-item';
-import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { FindReservationScheduleByIdUseCase } from './find-reservation-schedule-by-id';
+import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
+import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
 
-const schedule = new Schedule(
-    {
-        date: new Date(),
-        userId: '1',
-        scheduleItems: [new ScheduleItem('1', 'Book 1')],
-        status: ScheduleStatus.pending,
-    },
-    '1',
-);
-
-const MockRepository = () => {
-    return {
-        create: vi.fn(),
-        findById: vi.fn().mockReturnValue(Promise.resolve(schedule)),
-        findByUserIdAndLastDays: vi.fn(),
-        changeStatus: vi.fn(),
-    };
-};
+let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
 
 describe('[UT] - Find reservation schedule by id', () => {
+    beforeEach(() => {
+        schedulesRepository = SchedulesMockRepository();
+    });
+
     it('should find a reservation schedule by id', async () => {
-        const schedulesRepository = MockRepository();
+        const schedule = FakeScheduleFactory.create();
+
+        schedulesRepository.findById.mockResolvedValue(schedule);
+
         const findReservationScheduleById =
             new FindReservationScheduleByIdUseCase(schedulesRepository);
 
-        const result = await findReservationScheduleById.execute({ id: '1' });
+        const result = await findReservationScheduleById.execute({
+            id: schedule.id.toString(),
+        });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual({
             id: expect.any(String),
             date: schedule.date,
@@ -48,17 +39,13 @@ describe('[UT] - Find reservation schedule by id', () => {
         });
     });
 
-    it('should return a message error when schedule is not found', async () => {
-        const schedulesRepository = MockRepository();
-
-        schedulesRepository.findById.mockReturnValue(Promise.resolve(null));
-
+    it('should return null when schedule is not found', async () => {
         const findReservationScheduleById =
             new FindReservationScheduleByIdUseCase(schedulesRepository);
 
         const result = await findReservationScheduleById.execute({ id: '1' });
 
-        expect(result.isLeft()).toBe(true);
-        expect(result.value).toBeInstanceOf(ResourceNotFoundError);
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toBeNull();
     });
 });

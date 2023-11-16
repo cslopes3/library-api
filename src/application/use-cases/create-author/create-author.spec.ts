@@ -1,54 +1,37 @@
-import { Author } from '@domain/entities/author';
 import { CreateAuthorUseCase } from './create-author';
 import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
+import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
+import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
 
-const MockRepository = () => {
-    return {
-        findById: vi.fn(),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        validateManyIds: vi.fn(),
-    };
-};
-
-let createAuthorUseCase: CreateAuthorUseCase;
+let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
 describe('[UT] - Create author use case', () => {
+    beforeEach(() => {
+        authorsRepository = AuthorsMockRepository();
+    });
+
     it('should create an author', async () => {
-        const authorsRepository = MockRepository();
-        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
+        const author = FakeAuthorFactory.create();
+        const createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
+        const result = await createAuthorUseCase.execute({ name: author.name });
 
-        const result = await createAuthorUseCase.execute({
-            name: 'Name 1',
-        });
-
-        expect(result.isRight()).toBe(true);
-        expect(result.value).toEqual({
+        expect(result.isRight()).toBeTruthy();
+        expect(result.value).toMatchObject({
             id: expect.any(String),
-            name: 'Name 1',
+            name: author.name,
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
     });
 
     it('should return a message error when author already exists', async () => {
-        const author = new Author({
-            name: 'Name 1',
-        });
+        const author = FakeAuthorFactory.create();
+        authorsRepository.findByName.mockResolvedValue(author);
+        const createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
 
-        const authorsRepository = MockRepository();
-        authorsRepository.findByName.mockReturnValue(Promise.resolve(author));
+        const result = await createAuthorUseCase.execute({ name: author.name });
 
-        createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
-
-        const result = await createAuthorUseCase.execute({
-            name: 'Name 1',
-        });
-
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(AuthorAlreadyExistsError);
     });
 });

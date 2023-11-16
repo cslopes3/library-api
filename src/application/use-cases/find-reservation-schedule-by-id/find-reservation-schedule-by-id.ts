@@ -3,8 +3,7 @@ import {
     FindReservationScheduleByIdInputDto,
     FindReservationScheduleByIdOutputDto,
 } from './find-reservartion-schedule-dto';
-import { Either, left, right } from '@shared/errors/either';
-import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
+import { Either, right } from '@shared/errors/either';
 
 export class FindReservationScheduleByIdUseCase {
     constructor(private schedulesRepository: SchedulesRepository) {}
@@ -12,12 +11,12 @@ export class FindReservationScheduleByIdUseCase {
     async execute({
         id,
     }: FindReservationScheduleByIdInputDto): Promise<
-        Either<ResourceNotFoundError, FindReservationScheduleByIdOutputDto>
+        Either<null, FindReservationScheduleByIdOutputDto | null>
     > {
         const schedule = await this.schedulesRepository.findById(id);
 
         if (!schedule) {
-            return left(new ResourceNotFoundError());
+            return right(null);
         }
 
         return right({

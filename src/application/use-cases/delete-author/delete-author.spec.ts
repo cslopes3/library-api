@@ -1,49 +1,36 @@
-import { Author } from '@domain/entities/author';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { DeleteAuthorUseCase } from './delete-author';
+import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
+import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
 
-const author = new Author(
-    {
-        name: 'Updated Name',
-    },
-    '1',
-);
-
-const MockRepository = () => {
-    return {
-        findById: vi.fn().mockReturnValue(Promise.resolve(author)),
-        findByName: vi.fn(),
-        findMany: vi.fn(),
-        create: vi.fn(),
-        update: vi.fn(),
-        delete: vi.fn(),
-        validateManyIds: vi.fn(),
-    };
-};
+let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
 describe('[UT] - Delete author use case', () => {
+    beforeEach(() => {
+        authorsRepository = AuthorsMockRepository();
+    });
+
     it('should delete author', async () => {
-        const authorsRepository = MockRepository();
+        const author = FakeAuthorFactory.create();
+        authorsRepository.findById.mockResolvedValue(author);
         const deleteAuthorUseCase = new DeleteAuthorUseCase(authorsRepository);
 
         const result = await deleteAuthorUseCase.execute({
             id: author.id.toString(),
         });
 
-        expect(result.isRight()).toBe(true);
+        expect(result.isRight()).toBeTruthy();
     });
 
     it('should return error when author is not found', async () => {
-        const authorsRepository = MockRepository();
-        authorsRepository.findById.mockReturnValue(Promise.resolve(null));
-
+        const author = FakeAuthorFactory.create();
         const deleteAuthorUseCase = new DeleteAuthorUseCase(authorsRepository);
 
         const result = await deleteAuthorUseCase.execute({
             id: author.id.toString(),
         });
 
-        expect(result.isLeft()).toBe(true);
+        expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
     });
 });
