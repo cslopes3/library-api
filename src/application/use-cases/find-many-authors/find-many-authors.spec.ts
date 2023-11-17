@@ -1,4 +1,4 @@
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
+import { createFakeAuthor } from 'test/factories/fake-author-factory';
 import { FindManyAuthorsUseCase } from './find-many-authors';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
 
@@ -11,9 +11,9 @@ describe('[UT] - Find many authors use case', () => {
 
     it('should find many authors', async () => {
         const authors = [
-            FakeAuthorFactory.create(),
-            FakeAuthorFactory.create({ name: 'Author 2' }, '2'),
-            FakeAuthorFactory.create({ name: 'Author 3' }, '3'),
+            createFakeAuthor(),
+            createFakeAuthor({ name: 'Author 2' }),
+            createFakeAuthor({ name: 'Author 3' }),
         ];
 
         authorsRepository.findMany.mockResolvedValue(authors);

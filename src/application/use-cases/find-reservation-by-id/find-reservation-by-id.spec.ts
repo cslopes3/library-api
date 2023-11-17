@@ -1,4 +1,4 @@
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 import { FindReservationByIdUseCase } from './find-reservation-by-id';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 
@@ -10,7 +10,7 @@ describe('[UT] - Find reservation by id use case', () => {
     });
 
     it('should find a reservation by id', async () => {
-        const reservation = FakeReservationFactory.create();
+        const reservation = createFakeReservation();
 
         reservationsRepository.findById.mockResolvedValue(reservation);
 

@@ -5,24 +5,38 @@ import {
 import { PrismaService } from '../prisma.service';
 import { SchedulesRepository } from '@repository/schedules-repository';
 import { PrismaSchedulesRepository } from './prisma-schedule-repository';
-import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import {
+    PrismaFakeSchedule,
+    createFakeSchedule,
+} from 'test/factories/fake-schedule-factory';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import { BookAuthors } from '@domain/value-objects/book-authors';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { ScheduleItem } from '@domain/value-objects/schedule-item';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
+import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 import { Schedule } from '@domain/entities/schedule';
 
 let prisma: PrismaService;
 let schedulesRepository: SchedulesRepository;
+let prismaFakeUser: PrismaFakeUser;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeAuthor: PrismaFakeAuthor;
+let prismaFakeBook: PrismaFakeBook;
+let prismaFakeSchedule: PrismaFakeSchedule;
 
 describe('[UT] - Schedules repository', () => {
     beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         schedulesRepository = new PrismaSchedulesRepository(prisma);
+
+        prismaFakeUser = new PrismaFakeUser(prisma);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
+        prismaFakeSchedule = new PrismaFakeSchedule(prisma);
     });
 
     afterEach(async () => {
@@ -30,7 +44,21 @@ describe('[UT] - Schedules repository', () => {
     });
 
     it('should create a schedule', async () => {
-        const schedule = await createScheduleObjectAndSetup();
+        const user = await prismaFakeUser.create();
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        const schedule = await createFakeSchedule({
+            userId: user.id.toString(),
+            scheduleItems: [new ScheduleItem(book.id.toString(), book.name)],
+        });
 
         vi.spyOn(prisma.schedule, 'create');
 
@@ -54,23 +82,7 @@ describe('[UT] - Schedules repository', () => {
     });
 
     it('should find a schedule by id', async () => {
-        const schedule = await createScheduleObjectAndSetup();
-
-        await prisma.schedule.create({
-            data: {
-                id: schedule.id.toString(),
-                date: schedule.date,
-                userId: schedule.userId,
-                scheduleItems: {
-                    create: schedule.scheduleItems.map((item) => ({
-                        id: item.id.toString(),
-                        bookId: item.bookId,
-                        name: item.name,
-                    })),
-                },
-                status: schedule.status,
-            },
-        });
+        const schedule = await createScheduleSetup();
 
         const result = await schedulesRepository.findById(
             schedule.id.toString(),
@@ -82,23 +94,7 @@ describe('[UT] - Schedules repository', () => {
     });
 
     it('should find schedules by user id and last days', async () => {
-        const schedule = await createScheduleObjectAndSetup();
-
-        await prisma.schedule.create({
-            data: {
-                id: schedule.id.toString(),
-                date: schedule.date,
-                userId: schedule.userId,
-                scheduleItems: {
-                    create: schedule.scheduleItems.map((item) => ({
-                        id: item.id.toString(),
-                        bookId: item.bookId,
-                        name: item.name,
-                    })),
-                },
-                status: schedule.status,
-            },
-        });
+        const schedule = await createScheduleSetup();
 
         const result = await schedulesRepository.findByUserIdAndLastDays(
             schedule.userId,
@@ -111,23 +107,7 @@ describe('[UT] - Schedules repository', () => {
     });
 
     it('should change schedule status', async () => {
-        const schedule = await createScheduleObjectAndSetup();
-
-        await prisma.schedule.create({
-            data: {
-                id: schedule.id.toString(),
-                date: schedule.date,
-                userId: schedule.userId,
-                scheduleItems: {
-                    create: schedule.scheduleItems.map((item) => ({
-                        id: item.id.toString(),
-                        bookId: item.bookId,
-                        name: item.name,
-                    })),
-                },
-                status: schedule.status,
-            },
-        });
+        const schedule = await createScheduleSetup();
 
         vi.spyOn(prisma.schedule, 'update');
         const newStatus = 'canceled';
@@ -148,54 +128,17 @@ describe('[UT] - Schedules repository', () => {
     });
 });
 
-async function createScheduleObjectAndSetup(): Promise<Schedule> {
-    const user = FakeUserFactory.create();
-    const publisher = FakePublisherFactory.create();
-    const author = FakeAuthorFactory.create();
-    const book = FakeBookFactory.create({
-        authors: [new BookAuthors(author.id.toString(), author.name)],
+async function createScheduleSetup(): Promise<Schedule> {
+    const user = await prismaFakeUser.create();
+    const publisher = await prismaFakePublisher.create();
+    const author = await prismaFakeAuthor.create();
+    const book = await prismaFakeBook.create({
         publisher: new BookPublisher(publisher.id.toString(), publisher.name),
+        authors: [new BookAuthors(author.id.toString(), author.name)],
     });
-    const schedule = FakeScheduleFactory.create({
+    const schedule = await prismaFakeSchedule.create({
         userId: user.id.toString(),
         scheduleItems: [new ScheduleItem(book.id.toString(), book.name)],
-    });
-
-    await prisma.publisher.create({
-        data: {
-            id: publisher.id.toString(),
-            name: publisher.name,
-        },
-    });
-
-    await prisma.author.create({
-        data: {
-            id: author.id.toString(),
-            name: author.name,
-        },
-    });
-
-    await prisma.book.create({
-        data: {
-            id: book.id.toString(),
-            name: book.name,
-            publisherId: book.publisher.id,
-            editionNumber: book.edition.number,
-            editionDescription: book.edition.description,
-            editionYear: book.edition.year,
-            quantity: book.quantity,
-            available: book.available,
-            pages: book.pages,
-        },
-    });
-
-    await prisma.user.create({
-        data: {
-            id: user.id.toString(),
-            name: user.name,
-            email: user.email,
-            password: user.password,
-        },
     });
 
     return schedule;

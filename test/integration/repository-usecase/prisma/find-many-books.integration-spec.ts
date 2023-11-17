@@ -1,6 +1,9 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { FindManyBooksUseCase } from '@usecase/find-many-book/find-many-books';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +12,8 @@ import {
 let prisma: PrismaService;
 let booksRepository: PrismaBooksRepository;
 let findManyBooksUseCase: FindManyBooksUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[IT] - Find many books', () => {
     beforeEach(() => {
@@ -16,6 +21,8 @@ describe('[IT] - Find many books', () => {
         startEnvironment();
         booksRepository = new PrismaBooksRepository(prisma);
         findManyBooksUseCase = new FindManyBooksUseCase(booksRepository);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
@@ -23,38 +30,19 @@ describe('[IT] - Find many books', () => {
     });
 
     it('should find many books', async () => {
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
+        const publisher = await prismaFakePublisher.create();
+        await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
         });
-
-        await prisma.book.createMany({
-            data: [
-                {
-                    id: '1',
-                    name: 'Book 1',
-                    editionNumber: 1,
-                    editionDescription: 'Description',
-                    editionYear: 2023,
-                    quantity: 10,
-                    available: 9,
-                    pages: 100,
-                    publisherId: '1',
-                },
-                {
-                    id: '2',
-                    name: 'Book 2',
-                    editionNumber: 1,
-                    editionDescription: 'Description',
-                    editionYear: 2023,
-                    quantity: 10,
-                    available: 9,
-                    pages: 100,
-                    publisherId: '1',
-                },
-            ],
+        await prismaFakeBook.create({
+            name: 'Book 2',
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
         });
 
         const result = await findManyBooksUseCase.execute({

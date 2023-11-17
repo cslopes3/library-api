@@ -6,8 +6,8 @@ import { BooksMockRepository } from '@mocks/mock-books-repository';
 import { BookAuthorsMockRepository } from '@mocks/mock-book-authors-repository';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
 import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakePublisher } from 'test/factories/fake-publisher-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 
 let booksRepository: ReturnType<typeof BooksMockRepository>;
 let bookAuthorsRepository: ReturnType<typeof BookAuthorsMockRepository>;
@@ -23,8 +23,8 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should create a book', async () => {
-        const publisher = FakePublisherFactory.create();
-        const book = FakeBookFactory.create();
+        const publisher = createFakePublisher();
+        const book = createFakeBook();
 
         authorsRepository.validateManyIds.mockResolvedValue(true);
         publishersRepository.findById.mockResolvedValue(publisher);
@@ -84,7 +84,7 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when the book name already exists', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         booksRepository.findByName.mockResolvedValue(book);
 
@@ -119,7 +119,7 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when an author does not exists', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         authorsRepository.validateManyIds.mockResolvedValue(false);
 
@@ -154,7 +154,7 @@ describe('[UT] - Create book use case', () => {
     });
 
     it('should return a message error when publisher does not exists', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         authorsRepository.validateManyIds.mockResolvedValue(true);
 

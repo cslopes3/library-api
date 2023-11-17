@@ -1,7 +1,7 @@
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { DeletePublisherUseCase } from './delete-publisher';
 import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import { createFakePublisher } from 'test/factories/fake-publisher-factory';
 
 let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
@@ -11,7 +11,7 @@ describe('[UT] - Delete publisher use case', () => {
     });
 
     it('should delete publisher', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
         publishersRepository.findById.mockResolvedValue(publisher);
 
         const deletePublisherUseCase = new DeletePublisherUseCase(
@@ -26,7 +26,7 @@ describe('[UT] - Delete publisher use case', () => {
     });
 
     it('should return error when publisher is not found', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
         const deletePublisherUseCase = new DeletePublisherUseCase(
             publishersRepository,
         );

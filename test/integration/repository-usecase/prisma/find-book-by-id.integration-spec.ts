@@ -1,6 +1,9 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { FindBookByIdUseCase } from '@usecase/find-book-by-id/find-book-by-id';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +12,8 @@ import {
 let prisma: PrismaService;
 let booksRepository: PrismaBooksRepository;
 let findBookByIdUseCase: FindBookByIdUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[IT] - Find book by id', () => {
     beforeEach(() => {
@@ -16,6 +21,8 @@ describe('[IT] - Find book by id', () => {
         startEnvironment();
         booksRepository = new PrismaBooksRepository(prisma);
         findBookByIdUseCase = new FindBookByIdUseCase(booksRepository);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
@@ -23,29 +30,16 @@ describe('[IT] - Find book by id', () => {
     });
 
     it('should find a book', async () => {
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                editionNumber: 1,
-                editionDescription: 'Description',
-                editionYear: 2023,
-                quantity: 10,
-                available: 9,
-                pages: 100,
-                publisherId: '1',
-            },
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
         });
 
         const result = await findBookByIdUseCase.execute({
-            id: '1',
+            id: book.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

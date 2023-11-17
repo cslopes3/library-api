@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaPublishersRepository } from '@infra/database/prisma/repositories/prisma-publishers-repository';
 import { FindPublisherByIdUseCase } from '@usecase/find-publisher-by-id/find-publisher-by-id';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let publishersRepository: PrismaPublishersRepository;
 let findPublisherByIdUseCase: FindPublisherByIdUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
 
 describe('[IT] - Find publisher by id', () => {
     beforeEach(() => {
@@ -18,6 +20,7 @@ describe('[IT] - Find publisher by id', () => {
         findPublisherByIdUseCase = new FindPublisherByIdUseCase(
             publishersRepository,
         );
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
     });
 
     afterEach(async () => {
@@ -25,15 +28,10 @@ describe('[IT] - Find publisher by id', () => {
     });
 
     it('should find a publisher', async () => {
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
+        const publisher = await prismaFakePublisher.create();
 
         const result = await findPublisherByIdUseCase.execute({
-            id: '1',
+            id: publisher.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

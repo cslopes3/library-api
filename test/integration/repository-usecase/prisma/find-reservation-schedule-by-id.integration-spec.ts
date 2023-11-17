@@ -1,6 +1,12 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
+import { ScheduleItem } from '@domain/value-objects/schedule-item';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaSchedulesRepository } from '@infra/database/prisma/repositories/prisma-schedule-repository';
 import { FindReservationScheduleByIdUseCase } from '@usecase/find-reservation-schedule-by-id/find-reservation-schedule-by-id';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
+import { PrismaFakeSchedule } from 'test/factories/fake-schedule-factory';
+import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +15,10 @@ import {
 let prisma: PrismaService;
 let schedulesRepository: PrismaSchedulesRepository;
 let findReservationScheduleByIdUseCase: FindReservationScheduleByIdUseCase;
+let prismaFakeUser: PrismaFakeUser;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
+let prismaFakeSchedule: PrismaFakeSchedule;
 
 describe('[IT] - Find reservation schedule by id', () => {
     beforeEach(() => {
@@ -17,6 +27,11 @@ describe('[IT] - Find reservation schedule by id', () => {
         schedulesRepository = new PrismaSchedulesRepository(prisma);
         findReservationScheduleByIdUseCase =
             new FindReservationScheduleByIdUseCase(schedulesRepository);
+
+        prismaFakeUser = new PrismaFakeUser(prisma);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
+        prismaFakeSchedule = new PrismaFakeSchedule(prisma);
     });
 
     afterEach(async () => {
@@ -24,68 +39,33 @@ describe('[IT] - Find reservation schedule by id', () => {
     });
 
     it('should find a reservation schedule by id', async () => {
-        await prisma.user.create({
-            data: {
-                id: '1',
-                name: 'User 1',
-                email: 'email@email.com',
-                password: '1234',
-            },
+        const user = await prismaFakeUser.create();
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
         });
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                editionNumber: 1,
-                editionDescription: 'Description',
-                editionYear: 2023,
-                quantity: 10,
-                available: 10,
-                pages: 100,
-                publisherId: '1',
-            },
-        });
-
-        await prisma.schedule.create({
-            data: {
-                id: '1',
-                date: new Date(),
-                userId: '1',
-                scheduleItems: {
-                    create: [
-                        {
-                            id: '1',
-                            bookId: '1',
-                            name: 'Book 1',
-                        },
-                    ],
-                },
-                status: 'pending',
-            },
+        const schedule = await prismaFakeSchedule.create({
+            userId: user.id.toString(),
+            scheduleItems: [new ScheduleItem(book.id.toString(), book.name)],
         });
 
         const result = await findReservationScheduleByIdUseCase.execute({
-            id: '1',
+            id: schedule.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual({
             id: expect.any(String),
             date: expect.any(Date),
-            userId: '1',
+            userId: schedule.userId,
             scheduleItems: [
                 expect.objectContaining({
                     id: expect.any(String),
-                    bookId: '1',
-                    name: 'Book 1',
+                    bookId: schedule.scheduleItems[0].bookId,
+                    name: schedule.scheduleItems[0].name,
                 }),
             ],
             status: expect.any(String),

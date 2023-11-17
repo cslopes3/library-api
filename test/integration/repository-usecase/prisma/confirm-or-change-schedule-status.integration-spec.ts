@@ -1,8 +1,14 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
+import { ScheduleItem } from '@domain/value-objects/schedule-item';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { PrismaReservationsRepository } from '@infra/database/prisma/repositories/prisma-reservations-repository';
 import { PrismaSchedulesRepository } from '@infra/database/prisma/repositories/prisma-schedule-repository';
 import { ConfirmOrChangeScheduleStatusUseCase } from '@usecase/confirm-or-change-schedule-status/confirm-or-change-schedule-status';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
+import { PrismaFakeSchedule } from 'test/factories/fake-schedule-factory';
+import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -13,6 +19,10 @@ let schedulesRepository: PrismaSchedulesRepository;
 let reservationsRepository: PrismaReservationsRepository;
 let booksRepository: PrismaBooksRepository;
 let confirmOrChangeScheduleStatusUseCase: ConfirmOrChangeScheduleStatusUseCase;
+let prismaFakeUser: PrismaFakeUser;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
+let prismaFakeSchedule: PrismaFakeSchedule;
 
 describe('[IT] - Confirm or change status', () => {
     beforeEach(() => {
@@ -28,6 +38,11 @@ describe('[IT] - Confirm or change status', () => {
                 reservationsRepository,
                 booksRepository,
             );
+
+        prismaFakeUser = new PrismaFakeUser(prisma);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
+        prismaFakeSchedule = new PrismaFakeSchedule(prisma);
     });
 
     afterEach(async () => {
@@ -35,58 +50,24 @@ describe('[IT] - Confirm or change status', () => {
     });
 
     it('should be able to change status', async () => {
-        await prisma.user.create({
-            data: {
-                id: '1',
-                name: 'User 1',
-                email: 'email@email.com',
-                password: '1234',
-            },
+        const user = await prismaFakeUser.create();
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            available: 1,
         });
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2023,
-                quantity: 3,
-                available: 1,
-                pages: 200,
-            },
-        });
-
-        await prisma.schedule.create({
-            data: {
-                id: '1',
-                date: new Date(),
-                userId: '1',
-                scheduleItems: {
-                    create: [
-                        {
-                            id: '1',
-                            bookId: '1',
-                            name: 'Book 1',
-                        },
-                    ],
-                },
-                status: 'pending',
-            },
+        const schedule = await prismaFakeSchedule.create({
+            userId: user.id.toString(),
+            scheduleItems: [new ScheduleItem(book.id.toString(), book.name)],
         });
 
         vi.spyOn(booksRepository, 'addBookToStock');
 
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
-            id: '1',
+            id: schedule.id.toString(),
             status: 'canceled',
         });
 
@@ -95,69 +76,35 @@ describe('[IT] - Confirm or change status', () => {
     });
 
     it('should be able to confirm a schedule', async () => {
-        await prisma.user.create({
-            data: {
-                id: '1',
-                name: 'User 1',
-                email: 'email@email.com',
-                password: '1234',
-            },
+        const user = await prismaFakeUser.create();
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            available: 1,
         });
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2023,
-                quantity: 3,
-                available: 1,
-                pages: 200,
-            },
-        });
-
-        await prisma.schedule.create({
-            data: {
-                id: '1',
-                date: new Date(),
-                userId: '1',
-                scheduleItems: {
-                    create: [
-                        {
-                            id: '1',
-                            bookId: '1',
-                            name: 'Book 1',
-                        },
-                    ],
-                },
-                status: 'pending',
-            },
+        const schedule = await prismaFakeSchedule.create({
+            userId: user.id.toString(),
+            scheduleItems: [new ScheduleItem(book.id.toString(), book.name)],
         });
 
         vi.spyOn(reservationsRepository, 'create');
 
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
-            id: '1',
+            id: schedule.id.toString(),
             status: 'finished',
         });
 
         expect(result.isRight()).toBeTruthy();
         expect(reservationsRepository.create).toHaveBeenCalledWith(
             expect.objectContaining({
-                userId: '1',
+                userId: schedule.userId,
                 reservationItem: [
                     expect.objectContaining({
-                        bookId: '1',
-                        name: 'Book 1',
+                        bookId: schedule.scheduleItems[0].bookId,
+                        name: schedule.scheduleItems[0].name,
                         expirationDate: expect.any(Date),
                     }),
                 ],

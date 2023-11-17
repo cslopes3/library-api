@@ -1,9 +1,13 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaAuthorsRepository } from '@infra/database/prisma/repositories/prisma-authors-repository';
 import { PrismaBookAuthorsRepository } from '@infra/database/prisma/repositories/prisma-book-authors-repository';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { PrismaPublishersRepository } from '@infra/database/prisma/repositories/prisma-publishers-repository';
 import { UpdateBookUseCase } from '@usecase/update-book/update-book';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -15,6 +19,9 @@ let bookAuthorsRepository: PrismaBookAuthorsRepository;
 let authorsRepository: PrismaAuthorsRepository;
 let publishersRepository: PrismaPublishersRepository;
 let updateBookUseCase: UpdateBookUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeAuthor: PrismaFakeAuthor;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[IT] - Update book', () => {
     beforeEach(() => {
@@ -30,6 +37,10 @@ describe('[IT] - Update book', () => {
             authorsRepository,
             publishersRepository,
         );
+
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
@@ -37,42 +48,23 @@ describe('[IT] - Update book', () => {
     });
 
     it('should update a book', async () => {
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                editionNumber: 1,
-                editionDescription: 'Description',
-                editionYear: 2023,
-                quantity: 10,
-                available: 10,
-                pages: 100,
-                publisherId: '1',
-            },
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
         });
 
         vi.spyOn(bookAuthorsRepository, 'create');
         vi.spyOn(bookAuthorsRepository, 'delete');
 
         const result = await updateBookUseCase.execute({
-            id: '1',
-            name: 'Book 1',
-            authors: [{ id: '1', name: 'Author 1' }],
-            publisher: { id: '1', name: 'Publisher 1' },
+            id: book.id.toString(),
+            name: book.name,
+            authors: [{ id: author.id.toString(), name: author.name }],
+            publisher: { id: book.publisher.id, name: book.publisher.name },
             editionNumber: 2,
             editionDescription: 'Description updated',
             editionYear: 2023,
@@ -81,10 +73,10 @@ describe('[IT] - Update book', () => {
 
         expect(result.isRight()).toBeTruthy();
         expect(result.value).toEqual({
-            id: '1',
-            name: 'Book 1',
-            authors: [{ id: '1', name: 'Author 1' }],
-            publisher: { id: '1', name: 'Publisher 1' },
+            id: book.id.toString(),
+            name: book.name,
+            authors: [{ id: author.id.toString(), name: author.name }],
+            publisher: { id: book.publisher.id, name: book.publisher.name },
             editionNumber: 2,
             editionDescription: 'Description updated',
             editionYear: 2023,
@@ -94,7 +86,9 @@ describe('[IT] - Update book', () => {
             createdAt: expect.any(Date),
             updatedAt: expect.any(Date),
         });
-        expect(bookAuthorsRepository.delete).toHaveBeenCalledWith('1');
+        expect(bookAuthorsRepository.delete).toHaveBeenCalledWith(
+            book.id.toString(),
+        );
         expect(bookAuthorsRepository.create).toHaveBeenCalledOnce();
     });
 });

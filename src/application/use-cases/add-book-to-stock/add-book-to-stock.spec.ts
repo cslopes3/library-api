@@ -1,6 +1,6 @@
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { AddBookToStockUseCase } from './add-book-to-stock';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 
 let booksRepository: ReturnType<typeof BooksMockRepository>;
@@ -11,7 +11,7 @@ describe('[UT] - Add book to stock use case', () => {
     });
 
     it('should add book to stock', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
         const amount = 10;
         const expectedQuantity = book.quantity + amount;
         const expectedAvailable = book.available + amount;

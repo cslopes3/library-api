@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaAuthorsRepository } from '@infra/database/prisma/repositories/prisma-authors-repository';
 import { FindAuthorByIdUseCase } from '@usecase/find-author-by-id/find-author-by-id';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let authorsRepository: PrismaAuthorsRepository;
 let findAuthorByIdUseCase: FindAuthorByIdUseCase;
+let prismaFakeAuthor: PrismaFakeAuthor;
 
 describe('[IT] - Find author by id use case', () => {
     beforeEach(() => {
@@ -17,6 +19,7 @@ describe('[IT] - Find author by id use case', () => {
 
         authorsRepository = new PrismaAuthorsRepository(prisma);
         findAuthorByIdUseCase = new FindAuthorByIdUseCase(authorsRepository);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
     });
 
     afterEach(async () => {
@@ -24,16 +27,11 @@ describe('[IT] - Find author by id use case', () => {
     });
 
     it('should find an author', async () => {
-        const author = {
-            id: '1',
-            name: 'Author 1',
-        };
+        const author = await prismaFakeAuthor.create();
 
-        await prisma.author.create({
-            data: author,
+        const result = await findAuthorByIdUseCase.execute({
+            id: author.id.toString(),
         });
-
-        const result = await findAuthorByIdUseCase.execute({ id: author.id });
 
         expect(result.isRight()).toBeTruthy();
         expect(result.value?.name).toBe(author.name);

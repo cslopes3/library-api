@@ -2,7 +2,7 @@ import { FakeHasher } from 'test/cryptography/fake-hasher';
 import { RegisterUserUseCase } from './register-user';
 import { UserAlreadyExistsError } from '@usecase/@errors/user-already-exists-error';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
+import { createFakeUser } from 'test/factories/fake-user-factory';
 
 let usersRepository: ReturnType<typeof UsersMockRepository>;
 let fakeHasher: FakeHasher;
@@ -16,7 +16,7 @@ describe('[UT] - Register user', () => {
     });
 
     it('should be able to register a new user', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
 
         registerUserUseCase = new RegisterUserUseCase(
             usersRepository,
@@ -37,7 +37,7 @@ describe('[UT] - Register user', () => {
     });
 
     it('should return a message error when user already exists', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
 
         usersRepository.findByEmail.mockResolvedValue(user);
 
@@ -57,7 +57,7 @@ describe('[UT] - Register user', () => {
     });
 
     it('should hash user password upon registration', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
 
         registerUserUseCase = new RegisterUserUseCase(
             usersRepository,

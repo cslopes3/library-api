@@ -1,6 +1,9 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { RemoveBookFromStockUseCase } from '@usecase/remove-book-from-stock/remove-book-from-stock';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +12,8 @@ import {
 let prisma: PrismaService;
 let booksRepository: PrismaBooksRepository;
 let removeBookFromStockUseCase: RemoveBookFromStockUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[IT] - Remove book from stock', () => {
     beforeEach(() => {
@@ -18,6 +23,8 @@ describe('[IT] - Remove book from stock', () => {
         removeBookFromStockUseCase = new RemoveBookFromStockUseCase(
             booksRepository,
         );
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
@@ -27,34 +34,22 @@ describe('[IT] - Remove book from stock', () => {
     it('should remove book from stock', async () => {
         const bookQuantity = 10;
         const bookAvailable = 8;
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                editionNumber: 1,
-                editionDescription: 'Description',
-                editionYear: 2023,
-                quantity: bookQuantity,
-                available: bookAvailable,
-                pages: 100,
-                publisherId: '1',
-            },
-        });
-
         const amount = 5;
         const expectedQuantity = bookQuantity - amount;
         const expectedAvailable = bookAvailable - amount;
 
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            quantity: bookQuantity,
+            available: bookAvailable,
+        });
+
         const result = await removeBookFromStockUseCase.execute({
-            id: '1',
+            id: book.id.toString(),
             amount,
         });
 

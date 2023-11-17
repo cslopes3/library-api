@@ -2,7 +2,7 @@ import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error
 import { UpdateAuthorUseCase } from './update-author';
 import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
+import { createFakeAuthor } from 'test/factories/fake-author-factory';
 
 let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
@@ -12,7 +12,7 @@ describe('[UT] - Update author use case', () => {
     });
 
     it('should update author', async () => {
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
         const updatedName = 'Updated Author';
         authorsRepository.findById.mockResolvedValue(author);
 
@@ -46,8 +46,8 @@ describe('[UT] - Update author use case', () => {
     });
 
     it('should return a message error when author already exists', async () => {
-        const author = FakeAuthorFactory.create();
-        const authorWithSameName = FakeAuthorFactory.create({}, '2');
+        const author = createFakeAuthor();
+        const authorWithSameName = createFakeAuthor();
 
         authorsRepository.findById.mockResolvedValue(author);
         authorsRepository.findByName.mockResolvedValue(authorWithSameName);

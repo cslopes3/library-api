@@ -6,11 +6,11 @@ import { ReserveLimitError } from '@usecase/@errors/reserve-limit-error';
 import { BookWithReturnDateExpiredError } from '@usecase/@errors/book-with-return-date-expired-error';
 import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
+import { createFakeUser } from 'test/factories/fake-user-factory';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
 let booksRepository: ReturnType<typeof BooksMockRepository>;
@@ -24,12 +24,9 @@ describe('[UT] - Create reservation use case', () => {
     });
 
     it('should create a book reservation', async () => {
-        const books = [
-            FakeBookFactory.create(),
-            FakeBookFactory.create({ name: 'Book 2' }, '2'),
-        ];
-        const user = FakeUserFactory.create();
-        const reservation = FakeReservationFactory.create({
+        const books = [createFakeBook(), createFakeBook({ name: 'Book 2' })];
+        const user = createFakeUser();
+        const reservation = createFakeReservation({
             userId: user.id.toString(),
             reservationItem: books.map(
                 (book) =>
@@ -95,8 +92,8 @@ describe('[UT] - Create reservation use case', () => {
     });
 
     it('should return a message error when a book does not exists', async () => {
-        const user = FakeUserFactory.create();
-        const reservation = FakeReservationFactory.create();
+        const user = createFakeUser();
+        const reservation = createFakeReservation();
 
         reservationsRepository.findByUserId.mockResolvedValue([]);
         booksRepository.findMany.mockResolvedValue([]);
@@ -123,7 +120,7 @@ describe('[UT] - Create reservation use case', () => {
     });
 
     it('should return a message error when a user does not exists', async () => {
-        const reservation = FakeReservationFactory.create();
+        const reservation = createFakeReservation();
 
         reservationsRepository.findByUserId.mockResolvedValue([]);
         booksRepository.findMany.mockResolvedValue([]);
@@ -151,13 +148,13 @@ describe('[UT] - Create reservation use case', () => {
 
     it('should return a message error when a user will reserve more than 3 books', async () => {
         const books = [
-            FakeBookFactory.create(),
-            FakeBookFactory.create({ name: 'Book 2' }, '2'),
-            FakeBookFactory.create({ name: 'Book 3' }, '3'),
-            FakeBookFactory.create({ name: 'Book 4' }, '4'),
+            createFakeBook(),
+            createFakeBook({ name: 'Book 2' }),
+            createFakeBook({ name: 'Book 3' }),
+            createFakeBook({ name: 'Book 4' }),
         ];
-        const user = FakeUserFactory.create();
-        const reservationWithFourBooks = FakeReservationFactory.create({
+        const user = createFakeUser();
+        const reservationWithFourBooks = createFakeReservation({
             userId: user.id.toString(),
             reservationItem: books.map(
                 (book) =>
@@ -196,12 +193,9 @@ describe('[UT] - Create reservation use case', () => {
     });
 
     it('should return a message error when a user will reserve a book and it will exceed the 3 books limit', async () => {
-        const books = [
-            FakeBookFactory.create(),
-            FakeBookFactory.create({ name: 'Book 2' }, '2'),
-        ];
-        const user = FakeUserFactory.create();
-        const reservation = FakeReservationFactory.create({
+        const books = [createFakeBook(), createFakeBook({ name: 'Book 2' })];
+        const user = createFakeUser();
+        const reservation = createFakeReservation({
             userId: user.id.toString(),
             reservationItem: books.map(
                 (book) =>
@@ -216,12 +210,12 @@ describe('[UT] - Create reservation use case', () => {
         });
 
         const alreadyReservedBooks = [
-            FakeBookFactory.create({ name: 'Book 3' }, '3'),
-            FakeBookFactory.create({ name: 'Book 4' }, '4'),
+            createFakeBook({ name: 'Book 3' }),
+            createFakeBook({ name: 'Book 4' }),
         ];
 
         const userReservations = [
-            FakeReservationFactory.create({
+            createFakeReservation({
                 userId: user.id.toString(),
                 reservationItem: alreadyReservedBooks.map(
                     (book) =>
@@ -259,9 +253,9 @@ describe('[UT] - Create reservation use case', () => {
     });
 
     it('should return a message error when a user has a reservation with the return date expirated', async () => {
-        const books = [FakeBookFactory.create()];
-        const user = FakeUserFactory.create();
-        const reservation = FakeReservationFactory.create({
+        const books = [createFakeBook()];
+        const user = createFakeUser();
+        const reservation = createFakeReservation({
             userId: user.id.toString(),
             reservationItem: books.map(
                 (book) =>
@@ -276,7 +270,7 @@ describe('[UT] - Create reservation use case', () => {
         });
 
         const userReservations = [
-            FakeReservationFactory.create({
+            createFakeReservation({
                 userId: user.id.toString(),
                 reservationItem: books.map(
                     (book) =>
@@ -314,9 +308,9 @@ describe('[UT] - Create reservation use case', () => {
     });
 
     it('should return a message error when a book is not available', async () => {
-        const books = [FakeBookFactory.create({ available: 0 })];
-        const user = FakeUserFactory.create();
-        const reservation = FakeReservationFactory.create({
+        const books = [createFakeBook({ available: 0 })];
+        const user = createFakeUser();
+        const reservation = createFakeReservation({
             userId: user.id.toString(),
             reservationItem: books.map(
                 (book) =>

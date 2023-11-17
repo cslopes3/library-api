@@ -1,6 +1,9 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { AddBookToStockUseCase } from '@usecase/add-book-to-stock/add-book-to-stock';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +12,8 @@ import {
 let prisma: PrismaService;
 let booksRepository: PrismaBooksRepository;
 let addBookToStockUseCase: AddBookToStockUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[IT] - Add book to stock', () => {
     beforeEach(() => {
@@ -16,6 +21,9 @@ describe('[IT] - Add book to stock', () => {
         startEnvironment();
         booksRepository = new PrismaBooksRepository(prisma);
         addBookToStockUseCase = new AddBookToStockUseCase(booksRepository);
+
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
@@ -25,34 +33,22 @@ describe('[IT] - Add book to stock', () => {
     it('should add book to stock', async () => {
         const bookQuantity = 5;
         const bookAvailable = 3;
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2023,
-                quantity: bookQuantity,
-                available: bookAvailable,
-                pages: 200,
-            },
-        });
-
         const amount = 10;
         const expectedQuantity = bookQuantity + amount;
         const expectedAvailable = bookAvailable + amount;
 
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            quantity: bookQuantity,
+            available: bookAvailable,
+        });
+
         const result = await addBookToStockUseCase.execute({
-            id: '1',
+            id: book.id.toString(),
             amount,
         });
 

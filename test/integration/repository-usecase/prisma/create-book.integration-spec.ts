@@ -4,6 +4,8 @@ import { PrismaBookAuthorsRepository } from '@infra/database/prisma/repositories
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { PrismaPublishersRepository } from '@infra/database/prisma/repositories/prisma-publishers-repository';
 import { CreateBookUseCase } from '@usecase/create-book/create-book';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -15,6 +17,8 @@ let authorsRepository: PrismaAuthorsRepository;
 let bookAuthorsRepository: PrismaBookAuthorsRepository;
 let publishersRepository: PrismaPublishersRepository;
 let createBookUseCase: CreateBookUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeAuthor: PrismaFakeAuthor;
 
 describe('[IT] - Create book', () => {
     beforeEach(() => {
@@ -30,6 +34,9 @@ describe('[IT] - Create book', () => {
             authorsRepository,
             publishersRepository,
         );
+
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
     });
 
     afterEach(async () => {
@@ -37,33 +44,19 @@ describe('[IT] - Create book', () => {
     });
 
     it('should create a book', async () => {
-        vi.spyOn(bookAuthorsRepository, 'create');
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
         const book = {
             name: 'Book 1',
             authors: [
                 {
-                    id: '1',
-                    name: 'Author 1',
+                    id: author.id.toString(),
+                    name: author.name,
                 },
             ],
             publisher: {
-                id: '1',
-                name: 'Publisher 1',
+                id: publisher.id.toString(),
+                name: publisher.name,
             },
             editionNumber: 1,
             editionDescription: 'Description',
@@ -71,6 +64,8 @@ describe('[IT] - Create book', () => {
             quantity: 10,
             pages: 100,
         };
+
+        vi.spyOn(bookAuthorsRepository, 'create');
 
         const result = await createBookUseCase.execute(book);
 

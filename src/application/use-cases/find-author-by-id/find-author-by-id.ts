@@ -4,7 +4,9 @@ import {
     FindAuthorByIdOutputDto,
 } from './find-author-by-id-dto';
 import { Either, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindAuthorByIdUseCase {
     constructor(private authorsRepository: AuthorsRepository) {}
 

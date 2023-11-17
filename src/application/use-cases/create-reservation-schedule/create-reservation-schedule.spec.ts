@@ -10,12 +10,12 @@ import { CreateReservationScheduleUseCase } from './create-reservation-schedule'
 import { ScheduleLimitOfSameBookError } from '@usecase/@errors/schedule-limit-of-same-book-error';
 import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
-import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
+import { createFakeUser } from 'test/factories/fake-user-factory';
+import { createFakeSchedule } from 'test/factories/fake-schedule-factory';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 
 let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
@@ -31,9 +31,9 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should schedule a reservation', async () => {
-        const books = [FakeBookFactory.create()];
-        const user = FakeUserFactory.create();
-        const schedule = FakeScheduleFactory.create({
+        const books = [createFakeBook()];
+        const user = createFakeUser();
+        const schedule = createFakeSchedule({
             userId: user.id.toString(),
             scheduleItems: [
                 new ScheduleItem(books[0].id.toString(), books[0].name),
@@ -87,7 +87,7 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should return a message error when a user does not exists', async () => {
-        const schedule = FakeScheduleFactory.create();
+        const schedule = createFakeSchedule();
 
         const scheduleReservationUseCase = new CreateReservationScheduleUseCase(
             schedulesRepository,
@@ -110,8 +110,8 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should return a message error when a book does not exists', async () => {
-        const user = FakeUserFactory.create();
-        const schedule = FakeScheduleFactory.create({
+        const user = createFakeUser();
+        const schedule = createFakeSchedule({
             userId: user.id.toString(),
         });
 
@@ -139,9 +139,9 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should return a message error when a book is not available', async () => {
-        const books = [FakeBookFactory.create({ available: 0 })];
-        const user = FakeUserFactory.create();
-        const schedule = FakeScheduleFactory.create({
+        const books = [createFakeBook({ available: 0 })];
+        const user = createFakeUser();
+        const schedule = createFakeSchedule({
             userId: user.id.toString(),
             scheduleItems: [
                 new ScheduleItem(books[0].id.toString(), books[0].name),
@@ -172,9 +172,9 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should return a message error when a reservation has a deadline of more than 5 working days', async () => {
-        const books = [FakeBookFactory.create()];
-        const user = FakeUserFactory.create();
-        const scheduleWithDeadlineProblem = FakeScheduleFactory.create({
+        const books = [createFakeBook()];
+        const user = createFakeUser();
+        const scheduleWithDeadlineProblem = createFakeSchedule({
             userId: user.id.toString(),
             date: new Date(2999, 0, 1),
             scheduleItems: [
@@ -210,20 +210,17 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should return a message error when user will exceed the reservation limit', async () => {
-        const books = [
-            FakeBookFactory.create(),
-            FakeBookFactory.create({ name: 'Book 2' }, '2'),
-        ];
+        const books = [createFakeBook(), createFakeBook({ name: 'Book 2' })];
 
         const reservationBooks = [
-            FakeBookFactory.create({ name: 'Book 3' }, '3'),
-            FakeBookFactory.create({ name: 'Book 4' }, '4'),
+            createFakeBook({ name: 'Book 3' }),
+            createFakeBook({ name: 'Book 4' }),
         ];
 
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
 
         const reservation = [
-            FakeReservationFactory.create({
+            createFakeReservation({
                 userId: user.id.toString(),
                 reservationItem: reservationBooks.map(
                     (book) =>
@@ -238,7 +235,7 @@ describe('[UT] - Schedule reservation use case', () => {
             }),
         ];
 
-        const schedule = FakeScheduleFactory.create({
+        const schedule = createFakeSchedule({
             userId: user.id.toString(),
             scheduleItems: books.map(
                 (book) => new ScheduleItem(book.id.toString(), book.name),
@@ -271,17 +268,17 @@ describe('[UT] - Schedule reservation use case', () => {
     });
 
     it('should return a message error when user try to reserve the same book more than two times at the last 30 days', async () => {
-        const books = [FakeBookFactory.create()];
-        const user = FakeUserFactory.create();
+        const books = [createFakeBook()];
+        const user = createFakeUser();
         const schedulesWithMoreThanTwoTimesProblem = [
-            FakeScheduleFactory.create({
+            createFakeSchedule({
                 userId: user.id.toString(),
                 scheduleItems: [
                     new ScheduleItem(books[0].id.toString(), books[0].name),
                 ],
                 status: ScheduleStatus.canceled,
             }),
-            FakeScheduleFactory.create({
+            createFakeSchedule({
                 userId: user.id.toString(),
                 scheduleItems: [
                     new ScheduleItem(books[0].id.toString(), books[0].name),
@@ -290,7 +287,7 @@ describe('[UT] - Schedule reservation use case', () => {
             }),
         ];
 
-        const schedule = FakeScheduleFactory.create({
+        const schedule = createFakeSchedule({
             userId: user.id.toString(),
             scheduleItems: [
                 new ScheduleItem(books[0].id.toString(), books[0].name),

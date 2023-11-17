@@ -4,7 +4,7 @@ import { CantChangeStatusError } from '@usecase/@errors/cant-change-status-error
 import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
-import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
+import { createFakeSchedule } from 'test/factories/fake-schedule-factory';
 import { ScheduleStatus } from '@domain/entities/schedule';
 
 let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
@@ -19,7 +19,7 @@ describe('[UT] - Confirm or change schedule status', () => {
     });
 
     it('should be able to change status', async () => {
-        const schedule = FakeScheduleFactory.create();
+        const schedule = createFakeSchedule();
 
         reservationsRepository.findByUserId.mockResolvedValue([]);
         schedulesRepository.findById.mockResolvedValue(schedule);
@@ -43,7 +43,7 @@ describe('[UT] - Confirm or change schedule status', () => {
     });
 
     it('should not be able to change status if it is not pending', async () => {
-        const notPendingSchedule = FakeScheduleFactory.create({
+        const notPendingSchedule = createFakeSchedule({
             status: ScheduleStatus.canceled,
         });
 
@@ -67,7 +67,7 @@ describe('[UT] - Confirm or change schedule status', () => {
     });
 
     it('should be able to confirm a schedule', async () => {
-        const schedule = FakeScheduleFactory.create();
+        const schedule = createFakeSchedule();
 
         reservationsRepository.findByUserId.mockResolvedValue([]);
         schedulesRepository.findById.mockResolvedValue(schedule);

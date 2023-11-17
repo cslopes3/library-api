@@ -3,7 +3,7 @@ import { FakeEncrypter } from 'test/cryptography/fake-encrypter';
 import { FakeHasher } from 'test/cryptography/fake-hasher';
 import { WrongCredentialsError } from '@usecase/@errors/wrong-credentials-error';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
+import { createFakeUser } from 'test/factories/fake-user-factory';
 
 let usersRepository: ReturnType<typeof UsersMockRepository>;
 
@@ -19,9 +19,9 @@ describe('[UT] - Authenticate User', () => {
     });
 
     it('should authenticate a user', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
         const hashedPassord = await fakeHasher.hash(user.password);
-        const userWithHashedPassword = FakeUserFactory.create({
+        const userWithHashedPassword = createFakeUser({
             password: hashedPassord,
         });
 
@@ -61,8 +61,8 @@ describe('[UT] - Authenticate User', () => {
     });
 
     it('should return a message error when provide wrong password', async () => {
-        const user = FakeUserFactory.create();
-        const userWrongPassword = FakeUserFactory.create({ password: 'xxxx' });
+        const user = createFakeUser();
+        const userWrongPassword = createFakeUser({ password: 'xxxx' });
 
         usersRepository.findByEmail.mockResolvedValue(user);
 

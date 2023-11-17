@@ -43,3 +43,14 @@ Authorization: Bearer {{authToken}}
 {
     
 }
+
+###
+
+# @name find_author_by_id
+GET {{baseUrl}}/authors/9a941c97-c9dd-4767-8f82-c86e7f799273
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    
+}

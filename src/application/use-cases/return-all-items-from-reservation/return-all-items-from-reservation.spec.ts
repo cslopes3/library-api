@@ -2,7 +2,7 @@ import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { ReturnAllItemsFromReservationUseCase } from './return-all-items-from-reservation';
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 
@@ -16,7 +16,7 @@ describe('[UT] - Return all items from a reservation use case', () => {
     });
 
     it('should return all items from reservation', async () => {
-        const reservation = FakeReservationFactory.create();
+        const reservation = createFakeReservation();
         reservationsRepository.findById.mockResolvedValue(reservation);
 
         const returnAllItemsFromReservation =
@@ -64,7 +64,7 @@ describe('[UT] - Return all items from a reservation use case', () => {
     });
 
     it('should not extend the reservation when all items were returned', async () => {
-        const reservation = FakeReservationFactory.create({
+        const reservation = createFakeReservation({
             reservationItem: [
                 new ReservationItem('1', 'Book 1', new Date(), false, true),
                 new ReservationItem('2', 'Book 2', new Date(), false, true),

@@ -1,7 +1,13 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
+import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaReservationsRepository } from '@infra/database/prisma/repositories/prisma-reservations-repository';
 import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
 import { FindReservationsByUserIdUseCase } from '@usecase/find-reservations-by-user-id/find-reservations-by-user-id';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
+import { PrismaFakeReservation } from 'test/factories/fake-reservation-factory';
+import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -11,6 +17,10 @@ let prisma: PrismaService;
 let reservationsRepository: PrismaReservationsRepository;
 let usersRepository: PrismaUsersRepository;
 let findReservationsByUserIdUseCase: FindReservationsByUserIdUseCase;
+let prismaFakeUser: PrismaFakeUser;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
+let prismaFakeReservation: PrismaFakeReservation;
 
 describe('[IT] - Find reservation by user id', () => {
     beforeEach(() => {
@@ -22,6 +32,11 @@ describe('[IT] - Find reservation by user id', () => {
             reservationsRepository,
             usersRepository,
         );
+
+        prismaFakeUser = new PrismaFakeUser(prisma);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
+        prismaFakeReservation = new PrismaFakeReservation(prisma);
     });
 
     afterEach(async () => {
@@ -29,57 +44,31 @@ describe('[IT] - Find reservation by user id', () => {
     });
 
     it('should find a reservation by user id', async () => {
-        await prisma.user.create({
-            data: {
-                id: '1',
-                name: 'User 1',
-                email: 'email@email.com',
-                password: '1234',
-            },
+        const user = await prismaFakeUser.create();
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            quantity: 10,
+            available: 9,
         });
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                editionNumber: 1,
-                editionDescription: 'Description',
-                editionYear: 2023,
-                quantity: 10,
-                available: 10,
-                pages: 100,
-                publisherId: '1',
-            },
-        });
-
-        await prisma.reservation.create({
-            data: {
-                id: '1',
-                userId: '1',
-                reservationItems: {
-                    create: [
-                        {
-                            id: '1',
-                            bookId: '1',
-                            name: 'Book 1',
-                            expirationDate: new Date(),
-                            alreadyExtendTime: false,
-                            returned: false,
-                        },
-                    ],
-                },
-            },
+        const reservation = await prismaFakeReservation.create({
+            userId: user.id.toString(),
+            reservationItem: [
+                new ReservationItem(
+                    book.id.toString(),
+                    book.name,
+                    new Date(),
+                    false,
+                    false,
+                ),
+            ],
         });
 
         const result = await findReservationsByUserIdUseCase.execute({
-            userId: '1',
+            userId: reservation.userId,
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -87,17 +76,10 @@ describe('[IT] - Find reservation by user id', () => {
     });
 
     it('should return an empty array when not found a reservation', async () => {
-        await prisma.user.create({
-            data: {
-                id: '1',
-                name: 'User 1',
-                email: 'email@email.com',
-                password: '1234',
-            },
-        });
+        const user = await prismaFakeUser.create();
 
         const result = await findReservationsByUserIdUseCase.execute({
-            userId: '1',
+            userId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaPublishersRepository } from '@infra/database/prisma/repositories/prisma-publishers-repository';
 import { FindManyPublishersUseCase } from '@usecase/find-many-publishers/find-many-publishers';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let publishersRepository: PrismaPublishersRepository;
 let findManyPublishersUseCase: FindManyPublishersUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
 
 describe('[IT] - Find many publishers', () => {
     beforeEach(() => {
@@ -18,6 +20,7 @@ describe('[IT] - Find many publishers', () => {
         findManyPublishersUseCase = new FindManyPublishersUseCase(
             publishersRepository,
         );
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
     });
 
     afterEach(async () => {
@@ -25,18 +28,8 @@ describe('[IT] - Find many publishers', () => {
     });
 
     it('should find many publishers', async () => {
-        await prisma.publisher.createMany({
-            data: [
-                {
-                    id: '1',
-                    name: 'Publisher 1',
-                },
-                {
-                    id: '2',
-                    name: 'Publisher 2',
-                },
-            ],
-        });
+        await prismaFakePublisher.create();
+        await prismaFakePublisher.create({ name: 'Publisher 2' });
 
         const result = await findManyPublishersUseCase.execute({
             params: {

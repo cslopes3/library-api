@@ -4,16 +4,21 @@ import {
     stopEnvironment,
 } from 'test/utils/test-environment-setup';
 import { PrismaService } from '../prisma.service';
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
+import {
+    PrismaFakeAuthor,
+    createFakeAuthor,
+} from 'test/factories/fake-author-factory';
 
 let prisma: PrismaService;
 let authorsRepository: PrismaAuthorsRepository;
+let prismaFakeAuthor: PrismaFakeAuthor;
 
 describe('[UT] - Authors repository', () => {
     beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         authorsRepository = new PrismaAuthorsRepository(prisma);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
     });
 
     afterEach(async () => {
@@ -23,7 +28,7 @@ describe('[UT] - Authors repository', () => {
     it('should create an author', async () => {
         vi.spyOn(prisma.author, 'create');
 
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
 
         await authorsRepository.create(author);
 
@@ -36,22 +41,14 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should find many authors', async () => {
-        await prisma.author.createMany({
-            data: [
-                {
-                    name: 'Author 1',
-                },
-                {
-                    name: 'Author 2',
-                },
-            ],
-        });
+        const author = await prismaFakeAuthor.create();
+        const author2 = await prismaFakeAuthor.create({ name: 'Author 2' });
 
         const result = await authorsRepository.findMany({ page: 1 });
 
         expect(result).toHaveLength(2);
-        expect(result![0].name).toEqual('Author 1');
-        expect(result![1].name).toEqual('Author 2');
+        expect(result![0].name).toEqual(author.name);
+        expect(result![1].name).toEqual(author2.name);
     });
 
     it('should return an empty array when not found an author at findMany', async () => {
@@ -61,16 +58,11 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should find an author by id', async () => {
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
+        const author = await prismaFakeAuthor.create();
 
-        const result = await authorsRepository.findById('1');
+        const result = await authorsRepository.findById(author.id.toString());
 
-        expect(result?.name).toEqual('Author 1');
+        expect(result?.name).toEqual(author.name);
     });
 
     it('should return null when not found an author by id', async () => {
@@ -80,15 +72,11 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should find an author by name', async () => {
-        await prisma.author.create({
-            data: {
-                name: 'Author 1',
-            },
-        });
+        const author = await prismaFakeAuthor.create();
 
-        const result = await authorsRepository.findByName('Author 1');
+        const result = await authorsRepository.findByName(author.name);
 
-        expect(result?.name).toEqual('Author 1');
+        expect(result?.name).toEqual(author.name);
     });
 
     it('should return null when not found an author by name', async () => {
@@ -98,17 +86,12 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should update an author', async () => {
+        const updatedName = 'Updated Name';
+        const author = await prismaFakeAuthor.create();
+
+        author.changeName(updatedName);
+
         vi.spyOn(prisma.author, 'update');
-
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
-        const author = FakeAuthorFactory.create();
-
         await authorsRepository.update(author);
 
         expect(prisma.author.update).toHaveBeenCalledWith({
@@ -117,45 +100,33 @@ describe('[UT] - Authors repository', () => {
             },
             data: {
                 id: author.id.toString(),
-                name: author.name,
+                name: updatedName,
             },
         });
     });
 
     it('should delete an author', async () => {
+        const author = await prismaFakeAuthor.create();
+
         vi.spyOn(prisma.author, 'delete');
 
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
-        await authorsRepository.delete('1');
+        await authorsRepository.delete(author.id.toString());
 
         expect(prisma.author.delete).toHaveBeenCalledWith({
             where: {
-                id: '1',
+                id: author.id.toString(),
             },
         });
     });
 
     it('should return true when validating multiples ids', async () => {
-        await prisma.author.createMany({
-            data: [
-                {
-                    id: '1',
-                    name: 'Author 1',
-                },
-                {
-                    id: '2',
-                    name: 'Author 2',
-                },
-            ],
-        });
+        const author = await prismaFakeAuthor.create();
+        const author2 = await prismaFakeAuthor.create({ name: 'Author 2' });
 
-        const result = await authorsRepository.validateManyIds(['1', '2']);
+        const result = await authorsRepository.validateManyIds([
+            author.id.toString(),
+            author2.id.toString(),
+        ]);
 
         expect(result).toBe(true);
     });

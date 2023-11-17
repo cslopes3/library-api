@@ -3,12 +3,12 @@ import { BookAlreadyExistsError } from '@usecase/@errors/book-already-exists-err
 import { AuthorDoesNotExistsError } from '@usecase/@errors/author-does-not-exists-error';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not-exists-error';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
 import { BookAuthorsMockRepository } from '@mocks/mock-book-authors-repository';
 import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import { createFakePublisher } from 'test/factories/fake-publisher-factory';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
 
 let booksRepository: ReturnType<typeof BooksMockRepository>;
@@ -25,8 +25,8 @@ describe('[UT] - Update book use case', () => {
     });
 
     it('should update a book', async () => {
-        const publisher = FakePublisherFactory.create();
-        const book = FakeBookFactory.create({
+        const publisher = createFakePublisher();
+        const book = createFakeBook({
             publisher: new BookPublisher(
                 publisher.id.toString(),
                 publisher.name,
@@ -80,8 +80,8 @@ describe('[UT] - Update book use case', () => {
     });
 
     it('should return a message error when the book name already exists', async () => {
-        const book = FakeBookFactory.create();
-        const bookWithSameName = FakeBookFactory.create({}, '2');
+        const book = createFakeBook();
+        const bookWithSameName = createFakeBook();
 
         booksRepository.findById.mockResolvedValue(book);
         booksRepository.findByName.mockResolvedValue(bookWithSameName);
@@ -109,7 +109,7 @@ describe('[UT] - Update book use case', () => {
     });
 
     it('should return a message error when an author does not exists', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         booksRepository.findById.mockResolvedValue(book);
         authorsRepository.validateManyIds.mockResolvedValue(false);
@@ -137,7 +137,7 @@ describe('[UT] - Update book use case', () => {
     });
 
     it('should return error when book is not found', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         const updateBookUseCase = new UpdateBookUseCase(
             booksRepository,
@@ -162,7 +162,7 @@ describe('[UT] - Update book use case', () => {
     });
 
     it('should return a message error when publisher does not exists', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         booksRepository.findById.mockResolvedValue(book);
         authorsRepository.validateManyIds.mockResolvedValue(true);

@@ -5,7 +5,7 @@ import { AlreadyExtendedError } from '@usecase/@errors/already-extended-error';
 import { ExpiredDateError } from '@usecase/@errors/expired-date-error';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
 
@@ -15,7 +15,7 @@ describe('[UT] - Extend Reservation by id use case', () => {
     });
 
     it('should extend the reservation period', async () => {
-        const reservation = FakeReservationFactory.create();
+        const reservation = createFakeReservation();
 
         reservationsRepository.findById.mockResolvedValue(reservation);
         reservationsRepository.findByUserId.mockResolvedValue([reservation]);
@@ -59,7 +59,7 @@ describe('[UT] - Extend Reservation by id use case', () => {
     });
 
     it('should not extend the reservation period more than one time', async () => {
-        const reservation = FakeReservationFactory.create({
+        const reservation = createFakeReservation({
             reservationItem: [
                 new ReservationItem(
                     '1',
@@ -87,7 +87,7 @@ describe('[UT] - Extend Reservation by id use case', () => {
     });
 
     it('should not extend the reservation when it has a expired date', async () => {
-        const reservation = FakeReservationFactory.create({
+        const reservation = createFakeReservation({
             reservationItem: [
                 new ReservationItem(
                     '1',
@@ -122,7 +122,7 @@ describe('[UT] - Extend Reservation by id use case', () => {
     });
 
     it('should not extend the reservation when all items were returned', async () => {
-        const reservation = FakeReservationFactory.create({
+        const reservation = createFakeReservation({
             reservationItem: [
                 new ReservationItem(
                     '1',

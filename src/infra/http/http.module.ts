@@ -5,10 +5,12 @@ import { FindManyAuthorsController } from '@infra/http/controllers/find-many-aut
 import { AuthenticateController } from '@infra/http/controllers/authenticate-controller';
 import { DatabaseModule } from '@infra/database/prisma/database.module';
 import { CreateAuthorUseCase } from '@usecase/create-author/create-author';
-import { FindManyAuthorsUseCase } from '@usecase/find-many-author/find-many-authors';
+import { FindManyAuthorsUseCase } from '@usecase/find-many-authors/find-many-authors';
 import { CryptographyModule } from '@infra/cryptography/cryptography.module';
 import { RegisterUserUseCase } from '@usecase/register-user/register-user';
 import { AuthenticateUserUseCase } from '@usecase/authenticate-user/authenticate-user';
+import { FindAuthorByIdController } from './controllers/find-author-by-id.controller';
+import { FindAuthorByIdUseCase } from '@usecase/find-author-by-id/find-author-by-id';
 
 @Module({
     imports: [DatabaseModule, CryptographyModule],
@@ -16,10 +18,12 @@ import { AuthenticateUserUseCase } from '@usecase/authenticate-user/authenticate
         AuthenticateController,
         CreateAccountController,
         CreateAuthorController,
+        FindAuthorByIdController,
         FindManyAuthorsController,
     ],
     providers: [
         CreateAuthorUseCase,
+        FindAuthorByIdUseCase,
         FindManyAuthorsUseCase,
         RegisterUserUseCase,
         AuthenticateUserUseCase,

@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaPublishersRepository } from '@infra/database/prisma/repositories/prisma-publishers-repository';
 import { UpdatePublisherUseCase } from '@usecase/update-publisher/update-publisher';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let publishersRepository: PrismaPublishersRepository;
 let updatePublisherUseCase: UpdatePublisherUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
 
 describe('[IT] - Update publisher', () => {
     beforeEach(() => {
@@ -18,6 +20,8 @@ describe('[IT] - Update publisher', () => {
         updatePublisherUseCase = new UpdatePublisherUseCase(
             publishersRepository,
         );
+
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
     });
 
     afterEach(async () => {
@@ -25,16 +29,8 @@ describe('[IT] - Update publisher', () => {
     });
 
     it('should update publisher', async () => {
-        const publisher = {
-            id: '1',
-            name: 'Publisher 1',
-        };
-
-        await prisma.publisher.create({
-            data: publisher,
-        });
-
         const updatedName = 'Updated Publisher';
+        const publisher = await prismaFakePublisher.create();
 
         const result = await updatePublisherUseCase.execute({
             id: publisher.id.toString(),

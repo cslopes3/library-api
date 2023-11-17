@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaPublishersRepository } from '@infra/database/prisma/repositories/prisma-publishers-repository';
 import { DeletePublisherUseCase } from '@usecase/delete-publisher/delete-publisher';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let publishersRepository: PrismaPublishersRepository;
 let deletePublisherUseCase: DeletePublisherUseCase;
+let prismaFakePublisher: PrismaFakePublisher;
 
 describe('[IT] - Delete publisher ', () => {
     beforeEach(() => {
@@ -18,6 +20,7 @@ describe('[IT] - Delete publisher ', () => {
         deletePublisherUseCase = new DeletePublisherUseCase(
             publishersRepository,
         );
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
     });
 
     afterEach(async () => {
@@ -25,15 +28,10 @@ describe('[IT] - Delete publisher ', () => {
     });
 
     it('should delete publisher', async () => {
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
+        const publisher = await prismaFakePublisher.create();
 
         const result = await deletePublisherUseCase.execute({
-            id: '1',
+            id: publisher.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

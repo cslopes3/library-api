@@ -1,6 +1,6 @@
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 import { FindBookByIdUseCase } from './find-book-by-id';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 
 let booksRepository: ReturnType<typeof BooksMockRepository>;
 
@@ -10,7 +10,7 @@ describe('[UT] - Find book by id use case', () => {
     });
 
     it('should find a book', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
         booksRepository.findById.mockResolvedValue(book);
 
         const findBookByIdUseCase = new FindBookByIdUseCase(booksRepository);

@@ -7,6 +7,7 @@ import {
     stopEnvironment,
 } from 'test/utils/test-environment-setup';
 import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
+import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 
 const fakeHasher: FakeHasher = new FakeHasher();
 const encrypter: FakeEncrypter = new FakeEncrypter();
@@ -14,6 +15,7 @@ const encrypter: FakeEncrypter = new FakeEncrypter();
 let authenticateUserUseCase: AuthenticateUserUseCase;
 let prisma: PrismaService;
 let usersRepository: PrismaUsersRepository;
+let prismaFakeUser: PrismaFakeUser;
 
 describe('[IT] - Authenticate User', () => {
     beforeEach(() => {
@@ -26,6 +28,8 @@ describe('[IT] - Authenticate User', () => {
             fakeHasher,
             encrypter,
         );
+
+        prismaFakeUser = new PrismaFakeUser(prisma);
     });
 
     afterEach(async () => {
@@ -33,17 +37,14 @@ describe('[IT] - Authenticate User', () => {
     });
 
     it('should authenticate a user', async () => {
-        await prisma.user.create({
-            data: {
-                name: 'John Doe',
-                email: 'johndoe@example.com',
-                password: await fakeHasher.hash('123456'),
-            },
+        const password = '123456';
+        const user = await prismaFakeUser.create({
+            password: await fakeHasher.hash(password),
         });
 
         const result = await authenticateUserUseCase.execute({
-            email: 'johndoe@example.com',
-            password: '123456',
+            email: user.email,
+            password: password,
         });
 
         expect(result.isRight()).toBeTruthy();

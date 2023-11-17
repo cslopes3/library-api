@@ -1,9 +1,13 @@
+import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { PrismaReservationsRepository } from '@infra/database/prisma/repositories/prisma-reservations-repository';
 import { PrismaSchedulesRepository } from '@infra/database/prisma/repositories/prisma-schedule-repository';
 import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
 import { CreateReservationScheduleUseCase } from '@usecase/create-reservation-schedule/create-reservation-schedule';
+import { PrismaFakeBook } from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
+import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -15,6 +19,9 @@ let reservationsRepository: PrismaReservationsRepository;
 let booksRepository: PrismaBooksRepository;
 let usersRepository: PrismaUsersRepository;
 let createReservationScheduleUseCase: CreateReservationScheduleUseCase;
+let prismaFakeUser: PrismaFakeUser;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[IT] - Create reservation schedule', () => {
     beforeEach(() => {
@@ -30,6 +37,10 @@ describe('[IT] - Create reservation schedule', () => {
             booksRepository,
             usersRepository,
         );
+
+        prismaFakeUser = new PrismaFakeUser(prisma);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
@@ -37,71 +48,43 @@ describe('[IT] - Create reservation schedule', () => {
     });
 
     it('should schedule a reservation', async () => {
-        await prisma.user.create({
-            data: {
-                id: '1',
-                name: 'User 1',
-                email: 'email@email.com',
-                password: '1234',
-            },
-        });
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                editionNumber: 1,
-                editionDescription: 'Description',
-                editionYear: 2023,
-                quantity: 10,
-                available: 10,
-                pages: 100,
-                publisherId: '1',
-            },
+        const user = await prismaFakeUser.create();
+        const publisher = await prismaFakePublisher.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
         });
 
         vi.spyOn(booksRepository, 'removeBookFromStock');
 
         const result = await createReservationScheduleUseCase.execute({
             date: new Date(),
-            userId: '1',
+            userId: user.id.toString(),
             scheduleItems: [
                 {
-                    bookId: '1',
-                    name: 'Book 1',
+                    bookId: book.id.toString(),
+                    name: book.name,
                 },
             ],
         });
 
         expect(result.isRight()).toBeTruthy();
         expect(booksRepository.removeBookFromStock).toHaveBeenCalledWith(
-            '1',
+            book.id.toString(),
             1,
         );
 
         expect(result.value).toEqual({
             id: expect.any(String),
             date: expect.any(Date),
-            userId: '1',
+            userId: user.id.toString(),
             scheduleItems: [
                 expect.objectContaining({
                     id: expect.any(String),
-                    bookId: '1',
-                    name: 'Book 1',
+                    bookId: book.id.toString(),
+                    name: book.name,
                 }),
             ],
             status: expect.any(String),

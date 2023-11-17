@@ -2,8 +2,8 @@ import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-er
 import { FindLastThirtyScheduleByUserIdUseCase } from './find-last-thirty-days-schedule-by-user-id';
 import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
-import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
+import { createFakeUser } from 'test/factories/fake-user-factory';
+import { createFakeSchedule } from 'test/factories/fake-schedule-factory';
 
 let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
 let usersRepository: ReturnType<typeof UsersMockRepository>;
@@ -15,9 +15,9 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
     });
 
     it('should find a schedule by user id', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
         const schedule = [
-            FakeScheduleFactory.create({
+            createFakeSchedule({
                 userId: user.id.toString(),
             }),
         ];
@@ -71,7 +71,7 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
     });
 
     it('should return an empty array when not found a schedule', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
 
         schedulesRepository.findByUserIdAndLastDays.mockResolvedValue([]);
         usersRepository.findById.mockResolvedValue(user);

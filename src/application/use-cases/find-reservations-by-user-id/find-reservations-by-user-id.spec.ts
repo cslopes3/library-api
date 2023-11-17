@@ -2,8 +2,8 @@ import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-er
 import { FindReservationsByUserIdUseCase } from './find-reservations-by-user-id';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
-import { FakeUserFactory } from 'test/factories/fake-user-factory';
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeUser } from 'test/factories/fake-user-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
 let usersRepository: ReturnType<typeof UsersMockRepository>;
@@ -15,9 +15,9 @@ describe('[UT] - Find reservation by user id use case', () => {
     });
 
     it('should find a reservation by user id', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
         const reservation = [
-            FakeReservationFactory.create({
+            createFakeReservation({
                 userId: user.id.toString(),
             }),
         ];
@@ -58,7 +58,7 @@ describe('[UT] - Find reservation by user id use case', () => {
     });
 
     it('should return an empty array when not found a reservation', async () => {
-        const user = FakeUserFactory.create();
+        const user = createFakeUser();
 
         usersRepository.findById.mockResolvedValue(user);
         reservationsRepository.findByUserId.mockResolvedValue([]);

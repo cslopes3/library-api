@@ -2,7 +2,7 @@ import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error
 import { UpdatePublisherUseCase } from './update-publisher';
 import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
 import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import { createFakePublisher } from 'test/factories/fake-publisher-factory';
 
 let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
@@ -12,7 +12,7 @@ describe('[UT] - Update publisher use case', () => {
     });
 
     it('should update publisher', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
         const updatedName = 'Updated Publisher';
         publishersRepository.findById.mockResolvedValue(publisher);
 
@@ -35,7 +35,7 @@ describe('[UT] - Update publisher use case', () => {
     });
 
     it('should return error when publisher is not found', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
         const updatedName = 'Updated Publisher';
 
         const updatePublisherUseCase = new UpdatePublisherUseCase(
@@ -52,8 +52,8 @@ describe('[UT] - Update publisher use case', () => {
     });
 
     it('should return a message error when publisher already exists', async () => {
-        const publisher = FakePublisherFactory.create();
-        const publisherWithSameName = FakePublisherFactory.create({}, '2');
+        const publisher = createFakePublisher();
+        const publisherWithSameName = createFakePublisher();
 
         publishersRepository.findById.mockResolvedValue(publisher);
         publishersRepository.findByName.mockResolvedValue(

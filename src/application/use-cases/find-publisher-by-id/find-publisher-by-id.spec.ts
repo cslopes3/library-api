@@ -1,6 +1,6 @@
 import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
 import { FindPublisherByIdUseCase } from './find-publisher-by-id';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import { createFakePublisher } from 'test/factories/fake-publisher-factory';
 
 let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
@@ -10,7 +10,7 @@ describe('[UT] - Find publisher by id use case', () => {
     });
 
     it('should find an publisher', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
 
         publishersRepository.findById.mockResolvedValue(publisher);
 

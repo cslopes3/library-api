@@ -1,7 +1,7 @@
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { DeleteAuthorUseCase } from './delete-author';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
+import { createFakeAuthor } from 'test/factories/fake-author-factory';
 
 let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
@@ -11,7 +11,7 @@ describe('[UT] - Delete author use case', () => {
     });
 
     it('should delete author', async () => {
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
         authorsRepository.findById.mockResolvedValue(author);
         const deleteAuthorUseCase = new DeleteAuthorUseCase(authorsRepository);
 
@@ -23,7 +23,7 @@ describe('[UT] - Delete author use case', () => {
     });
 
     it('should return error when author is not found', async () => {
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
         const deleteAuthorUseCase = new DeleteAuthorUseCase(authorsRepository);
 
         const result = await deleteAuthorUseCase.execute({

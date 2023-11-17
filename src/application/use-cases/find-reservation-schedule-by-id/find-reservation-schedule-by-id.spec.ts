@@ -1,6 +1,6 @@
 import { FindReservationScheduleByIdUseCase } from './find-reservation-schedule-by-id';
 import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
-import { FakeScheduleFactory } from 'test/factories/fake-schedule-factory';
+import { createFakeSchedule } from 'test/factories/fake-schedule-factory';
 
 let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
 
@@ -10,7 +10,7 @@ describe('[UT] - Find reservation schedule by id', () => {
     });
 
     it('should find a reservation schedule by id', async () => {
-        const schedule = FakeScheduleFactory.create();
+        const schedule = createFakeSchedule();
 
         schedulesRepository.findById.mockResolvedValue(schedule);
 

@@ -4,16 +4,21 @@ import {
     stopEnvironment,
 } from 'test/utils/test-environment-setup';
 import { PrismaService } from '../prisma.service';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import {
+    PrismaFakePublisher,
+    createFakePublisher,
+} from 'test/factories/fake-publisher-factory';
 
 let prisma: PrismaService;
 let publishersRepository: PrismaPublishersRepository;
+let prismaFakePublisher: PrismaFakePublisher;
 
 describe('[UT] - Authors repository', () => {
     beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         publishersRepository = new PrismaPublishersRepository(prisma);
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
     });
 
     afterEach(async () => {
@@ -21,9 +26,9 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should create a publisher', async () => {
-        vi.spyOn(prisma.publisher, 'create');
+        const publisher = createFakePublisher();
 
-        const publisher = FakePublisherFactory.create();
+        vi.spyOn(prisma.publisher, 'create');
 
         await publishersRepository.create(publisher);
 
@@ -36,22 +41,16 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should find many publishers', async () => {
-        await prisma.publisher.createMany({
-            data: [
-                {
-                    name: 'Publisher 1',
-                },
-                {
-                    name: 'Publisher 2',
-                },
-            ],
+        const publisher = await prismaFakePublisher.create();
+        const publisher2 = await prismaFakePublisher.create({
+            name: 'Publisher 2',
         });
 
         const result = await publishersRepository.findMany({ page: 1 });
 
         expect(result).toHaveLength(2);
-        expect(result![0].name).toEqual('Publisher 1');
-        expect(result![1].name).toEqual('Publisher 2');
+        expect(result![0].name).toEqual(publisher.name);
+        expect(result![1].name).toEqual(publisher2.name);
     });
 
     it('should return an empty array when not found a publisher at findMany', async () => {
@@ -61,16 +60,13 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should find a publisher by id', async () => {
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
+        const publisher = await prismaFakePublisher.create();
 
-        const result = await publishersRepository.findById('1');
+        const result = await publishersRepository.findById(
+            publisher.id.toString(),
+        );
 
-        expect(result?.name).toEqual('Publisher 1');
+        expect(result?.name).toEqual(publisher.name);
     });
 
     it('should return null when not found a publisher by id', async () => {
@@ -80,15 +76,11 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should find an publisher by name', async () => {
-        await prisma.publisher.create({
-            data: {
-                name: 'Publisher 1',
-            },
-        });
+        const publisher = await prismaFakePublisher.create();
 
-        const result = await publishersRepository.findByName('Publisher 1');
+        const result = await publishersRepository.findByName(publisher.name);
 
-        expect(result?.name).toEqual('Publisher 1');
+        expect(result?.name).toEqual(publisher.name);
     });
 
     it('should return null when not found a publisher by name', async () => {
@@ -98,16 +90,12 @@ describe('[UT] - Authors repository', () => {
     });
 
     it('should update a publisher', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const updatedName = 'Updated Name';
+
         vi.spyOn(prisma.publisher, 'update');
 
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        const publisher = FakePublisherFactory.create();
+        publisher.changeName(updatedName);
 
         await publishersRepository.update(publisher);
 
@@ -117,45 +105,35 @@ describe('[UT] - Authors repository', () => {
             },
             data: {
                 id: publisher.id.toString(),
-                name: publisher.name,
+                name: updatedName,
             },
         });
     });
 
     it('should delete a publisher', async () => {
+        const publisher = await prismaFakePublisher.create();
+
         vi.spyOn(prisma.publisher, 'delete');
 
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await publishersRepository.delete('1');
+        await publishersRepository.delete(publisher.id.toString());
 
         expect(prisma.publisher.delete).toHaveBeenCalledWith({
             where: {
-                id: '1',
+                id: publisher.id.toString(),
             },
         });
     });
 
     it('should return true when validating multiples ids', async () => {
-        await prisma.publisher.createMany({
-            data: [
-                {
-                    id: '1',
-                    name: 'Publisher 1',
-                },
-                {
-                    id: '2',
-                    name: 'Publisher 2',
-                },
-            ],
+        const publisher = await prismaFakePublisher.create();
+        const publisher2 = await prismaFakePublisher.create({
+            name: 'Publisher 2',
         });
 
-        const result = await publishersRepository.validateManyIds(['1', '2']);
+        const result = await publishersRepository.validateManyIds([
+            publisher.id.toString(),
+            publisher2.id.toString(),
+        ]);
 
         expect(result).toBe(true);
     });

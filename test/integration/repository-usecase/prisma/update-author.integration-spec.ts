@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaAuthorsRepository } from '@infra/database/prisma/repositories/prisma-authors-repository';
 import { UpdateAuthorUseCase } from '@usecase/update-author/update-author';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let authorsRepository: PrismaAuthorsRepository;
 let updateAuthorUseCase: UpdateAuthorUseCase;
+let prismaFakeAuthor: PrismaFakeAuthor;
 
 describe('[IT] - Update author ', () => {
     beforeEach(() => {
@@ -16,6 +18,8 @@ describe('[IT] - Update author ', () => {
         startEnvironment();
         authorsRepository = new PrismaAuthorsRepository(prisma);
         updateAuthorUseCase = new UpdateAuthorUseCase(authorsRepository);
+
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
     });
 
     afterEach(async () => {
@@ -23,16 +27,8 @@ describe('[IT] - Update author ', () => {
     });
 
     it('should update author', async () => {
-        const author = {
-            id: '1',
-            name: 'Author 1',
-        };
-
-        await prisma.author.create({
-            data: author,
-        });
-
         const updatedName = 'Updated Author';
+        const author = await prismaFakeAuthor.create();
 
         const result = await updateAuthorUseCase.execute({
             id: author.id.toString(),

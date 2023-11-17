@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaAuthorsRepository } from '@infra/database/prisma/repositories/prisma-authors-repository';
 import { DeleteAuthorUseCase } from '@usecase/delete-author/delete-author';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let authorsRepository: PrismaAuthorsRepository;
 let deleteAuthorUseCase: DeleteAuthorUseCase;
+let prismaFakeAuthor: PrismaFakeAuthor;
 
 describe('[IT] - Delete author ', () => {
     beforeEach(() => {
@@ -16,6 +18,7 @@ describe('[IT] - Delete author ', () => {
         startEnvironment();
         authorsRepository = new PrismaAuthorsRepository(prisma);
         deleteAuthorUseCase = new DeleteAuthorUseCase(authorsRepository);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
     });
 
     afterEach(async () => {
@@ -23,17 +26,10 @@ describe('[IT] - Delete author ', () => {
     });
 
     it('should delete author', async () => {
-        const author = {
-            id: '1',
-            name: 'Author 1',
-        };
-
-        await prisma.author.create({
-            data: author,
-        });
+        const author = await prismaFakeAuthor.create();
 
         const result = await deleteAuthorUseCase.execute({
-            id: author.id,
+            id: author.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

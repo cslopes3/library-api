@@ -1,6 +1,7 @@
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaAuthorsRepository } from '@infra/database/prisma/repositories/prisma-authors-repository';
 import { FindManyAuthorsUseCase } from '@usecase/find-many-authors/find-many-authors';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
 import {
     startEnvironment,
     stopEnvironment,
@@ -9,6 +10,7 @@ import {
 let prisma: PrismaService;
 let authorsRepository: PrismaAuthorsRepository;
 let findManyAuthorsUseCase: FindManyAuthorsUseCase;
+let prismaFakeAuthor: PrismaFakeAuthor;
 
 describe('[IT] - Find many authors', () => {
     beforeEach(() => {
@@ -17,6 +19,7 @@ describe('[IT] - Find many authors', () => {
 
         authorsRepository = new PrismaAuthorsRepository(prisma);
         findManyAuthorsUseCase = new FindManyAuthorsUseCase(authorsRepository);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
     });
 
     afterEach(async () => {
@@ -25,20 +28,10 @@ describe('[IT] - Find many authors', () => {
 
     it('should find many authors', async () => {
         const authors = [
-            {
-                name: 'Author 1',
-            },
-            {
-                name: 'Author 2',
-            },
-            {
-                name: 'Author 3',
-            },
+            await prismaFakeAuthor.create(),
+            await prismaFakeAuthor.create({ name: 'Author 2' }),
+            await prismaFakeAuthor.create({ name: 'Author 3' }),
         ];
-
-        await prisma.author.createMany({
-            data: authors,
-        });
 
         const result = await findManyAuthorsUseCase.execute({
             params: {

@@ -1,7 +1,7 @@
 import { CreateAuthorUseCase } from './create-author';
 import { AuthorAlreadyExistsError } from '@usecase/@errors/author-already-exists-error';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
+import { createFakeAuthor } from 'test/factories/fake-author-factory';
 
 let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
@@ -11,7 +11,7 @@ describe('[UT] - Create author use case', () => {
     });
 
     it('should create an author', async () => {
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
         const createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
         const result = await createAuthorUseCase.execute({ name: author.name });
 
@@ -25,7 +25,7 @@ describe('[UT] - Create author use case', () => {
     });
 
     it('should return a message error when author already exists', async () => {
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
         authorsRepository.findByName.mockResolvedValue(author);
         const createAuthorUseCase = new CreateAuthorUseCase(authorsRepository);
 

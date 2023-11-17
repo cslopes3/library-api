@@ -1,6 +1,6 @@
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { DeleteBookUseCase } from './delete-book';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 import { BookAuthorsMockRepository } from '@mocks/mock-book-authors-repository';
 
@@ -14,7 +14,7 @@ describe('[UT] - Delete book use case', () => {
     });
 
     it('should delete book', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
 
         booksRepository.findById.mockResolvedValue(book);
 

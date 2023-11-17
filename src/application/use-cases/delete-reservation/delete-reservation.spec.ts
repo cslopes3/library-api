@@ -2,7 +2,7 @@ import { DeleteReservationUseCase } from './delete-reservation';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
-import { FakeReservationFactory } from 'test/factories/fake-reservation-factory';
+import { createFakeReservation } from 'test/factories/fake-reservation-factory';
 
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
 let booksRepository: ReturnType<typeof BooksMockRepository>;
@@ -14,7 +14,7 @@ describe('[UT] - Delete reservation use case', () => {
     });
 
     it('should delete a reservation', async () => {
-        const reservation = FakeReservationFactory.create();
+        const reservation = createFakeReservation();
         const deleteReservationUseCase = new DeleteReservationUseCase(
             reservationsRepository,
             booksRepository,

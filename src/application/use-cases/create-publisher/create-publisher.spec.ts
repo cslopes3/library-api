@@ -1,7 +1,7 @@
 import { PublishersMockRepository } from '@mocks/mock-publishers-repository';
 import { CreatePublisherUseCase } from './create-publisher';
 import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
-import { FakePublisherFactory } from 'test/factories/fake-publisher-factory';
+import { createFakePublisher } from 'test/factories/fake-publisher-factory';
 
 let publishersRepository: ReturnType<typeof PublishersMockRepository>;
 
@@ -11,7 +11,7 @@ describe('[UT] - Create publisher use case', () => {
     });
 
     it('should create a publisher', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
 
         const createPublisherUseCase = new CreatePublisherUseCase(
             publishersRepository,
@@ -31,7 +31,7 @@ describe('[UT] - Create publisher use case', () => {
     });
 
     it('should return a message error when publisher already exists', async () => {
-        const publisher = FakePublisherFactory.create();
+        const publisher = createFakePublisher();
 
         publishersRepository.findByName.mockResolvedValue(publisher);
 

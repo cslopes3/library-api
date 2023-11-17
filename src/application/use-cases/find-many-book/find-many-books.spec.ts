@@ -1,4 +1,4 @@
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { FindManyBooksUseCase } from './find-many-books';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 
@@ -11,9 +11,9 @@ describe('[UT] - Find many books use case', () => {
 
     it('should find many books', async () => {
         const books = [
-            FakeBookFactory.create(),
-            FakeBookFactory.create({ name: 'Book 2' }, '2'),
-            FakeBookFactory.create({ name: 'Book 3' }, '3'),
+            createFakeBook(),
+            createFakeBook({ name: 'Book 2' }),
+            createFakeBook({ name: 'Book 3' }),
         ];
 
         booksRepository.findMany.mockResolvedValue(books);

@@ -1,7 +1,7 @@
 import { CantRemoveFromStockError } from '@usecase/@errors/cant-remove-from-stock-error';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { RemoveBookFromStockUseCase } from './remove-book-from-stock';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import { createFakeBook } from 'test/factories/fake-book-factory';
 import { BooksMockRepository } from '@mocks/mock-books-repository';
 
 let booksRepository: ReturnType<typeof BooksMockRepository>;
@@ -12,7 +12,7 @@ describe('[UT] - Remove book from stock use case', () => {
     });
 
     it('should remove book from stock', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
         const amount = 5;
         const expectedQuantity = book.quantity - amount;
         const expectedAvailable = book.available - amount;
@@ -52,7 +52,7 @@ describe('[UT] - Remove book from stock use case', () => {
     });
 
     it('should return error when the removed amount is bigger than the available or total amount', async () => {
-        const book = FakeBookFactory.create();
+        const book = createFakeBook();
         const amount = book.quantity + 5;
 
         booksRepository.findById.mockResolvedValue(book);

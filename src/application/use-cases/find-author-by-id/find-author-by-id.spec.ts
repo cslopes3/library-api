@@ -1,6 +1,6 @@
 import { FindAuthorByIdUseCase } from './find-author-by-id';
 import { AuthorsMockRepository } from '@mocks/mock-authors-repository';
-import { FakeAuthorFactory } from 'test/factories/fake-author-factory';
+import { createFakeAuthor } from 'test/factories/fake-author-factory';
 
 let authorsRepository: ReturnType<typeof AuthorsMockRepository>;
 
@@ -10,7 +10,7 @@ describe('[UT] - Find author by id use case', () => {
     });
 
     it('should find an author', async () => {
-        const author = FakeAuthorFactory.create();
+        const author = createFakeAuthor();
         authorsRepository.findById.mockResolvedValue(author);
 
         const findAuthorByIdUseCase = new FindAuthorByIdUseCase(

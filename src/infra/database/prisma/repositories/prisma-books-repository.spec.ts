@@ -7,27 +7,46 @@ import { PrismaBooksRepository } from './prisma-books-repository';
 import { BookAuthors } from '@domain/value-objects/book-authors';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { BookEdition } from '@domain/value-objects/book-edition';
-import { FakeBookFactory } from 'test/factories/fake-book-factory';
+import {
+    PrismaFakeBook,
+    createFakeBook,
+} from 'test/factories/fake-book-factory';
+import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
+import { PrismaFakeAuthor } from 'test/factories/fake-author-factory';
 
 let prisma: PrismaService;
 let booksRepository: PrismaBooksRepository;
+let prismaFakePublisher: PrismaFakePublisher;
+let prismaFakeAuthor: PrismaFakeAuthor;
+let prismaFakeBook: PrismaFakeBook;
 
 describe('[UT] - Books repository', () => {
     beforeEach(() => {
         prisma = new PrismaService();
         startEnvironment();
         booksRepository = new PrismaBooksRepository(prisma);
+
+        prismaFakePublisher = new PrismaFakePublisher(prisma);
+        prismaFakeAuthor = new PrismaFakeAuthor(prisma);
+        prismaFakeBook = new PrismaFakeBook(prisma);
     });
 
     afterEach(async () => {
         await stopEnvironment(prisma);
     });
 
-    it('should create a author', async () => {
+    it('should create a book', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = createFakeBook({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
         vi.spyOn(prisma.book, 'create');
-
-        const book = FakeBookFactory.create();
-
         await booksRepository.create(book);
 
         expect(prisma.book.create).toHaveBeenCalledWith({
@@ -46,41 +65,19 @@ describe('[UT] - Books repository', () => {
     });
 
     it('should update a book', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        book.changeEdition(new BookEdition(3, 'Updated Description', 2023));
+
         vi.spyOn(prisma.book, 'update');
-
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2020,
-                quantity: 3,
-                available: 1,
-                pages: 10,
-            },
-        });
-
-        const book = FakeBookFactory.create({
-            authors: [new BookAuthors('1', 'Author 1')],
-            publisher: new BookPublisher('1', 'Publisher 1'),
-            edition: new BookEdition(3, 'Book 1 description', 2023),
-        });
 
         await booksRepository.update(book);
 
@@ -101,40 +98,22 @@ describe('[UT] - Books repository', () => {
     });
 
     it('should delete a book', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
         vi.spyOn(prisma.book, 'delete');
 
-        await prisma.publisher.create({
-            data: {
-                id: '1',
-                name: 'Publisher 1',
-            },
-        });
-
-        await prisma.author.create({
-            data: {
-                id: '1',
-                name: 'Author 1',
-            },
-        });
-
-        await prisma.book.create({
-            data: {
-                id: '1',
-                name: 'Book 1',
-                publisherId: '1',
-                editionNumber: 3,
-                editionDescription: 'Book 1 description',
-                editionYear: 2023,
-                quantity: 3,
-                available: 1,
-                pages: 200,
-            },
-        });
-
-        await booksRepository.delete('1');
+        await booksRepository.delete(book.id.toString());
         expect(prisma.book.delete).toHaveBeenCalledWith({
             where: {
-                id: '1',
+                id: book.id.toString(),
             },
         });
     });
