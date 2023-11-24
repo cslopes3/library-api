@@ -7,7 +7,9 @@ import {
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { Either, left, right } from '@shared/errors/either';
 import dayjs from 'dayjs';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindLastThirtyScheduleByUserIdUseCase {
     constructor(
         private schedulesRepository: SchedulesRepository,

@@ -5,7 +5,9 @@ import {
 } from './add-book-to-stock-dto';
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class AddBookToStockUseCase {
     constructor(private booksRepository: BooksRepository) {}
 
@@ -21,7 +23,7 @@ export class AddBookToStockUseCase {
             return left(new ResourceNotFoundError());
         }
 
-        await this.booksRepository.addBookToStock(id, amount);
+        await this.booksRepository.addBookToStock(id, amount, true);
 
         book.addBookToStock(amount);
 

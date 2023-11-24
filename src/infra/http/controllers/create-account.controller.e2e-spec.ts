@@ -4,7 +4,7 @@ import { Test } from '@nestjs/testing';
 import request from 'supertest';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 
-describe('[E@E] - Create account', () => {
+describe('[E2E] - Create account', () => {
     let app: INestApplication;
     let prisma: PrismaService;
 
@@ -24,8 +24,8 @@ describe('[E@E] - Create account', () => {
         const response = await request(app.getHttpServer())
             .post('/accounts')
             .send({
-                name: 'John Doe',
-                email: 'johndoe@example.com',
+                name: 'User',
+                email: 'user@example.com',
                 password: '123456',
             });
 
@@ -33,7 +33,7 @@ describe('[E@E] - Create account', () => {
 
         const userOnDatabase = await prisma.user.findUnique({
             where: {
-                email: 'johndoe@example.com',
+                email: 'user@example.com',
             },
         });
 

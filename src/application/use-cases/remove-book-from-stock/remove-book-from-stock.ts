@@ -6,7 +6,9 @@ import {
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { CantRemoveFromStockError } from '@usecase/@errors/cant-remove-from-stock-error';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class RemoveBookFromStockUseCase {
     constructor(private booksRespository: BooksRepository) {}
 
@@ -29,7 +31,7 @@ export class RemoveBookFromStockUseCase {
             return left(new CantRemoveFromStockError());
         }
 
-        await this.booksRespository.removeBookFromStock(id, amount);
+        await this.booksRespository.removeBookFromStock(id, amount, true);
 
         book.removeBookFromStock(amount);
 

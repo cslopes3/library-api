@@ -15,7 +15,9 @@ import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error';
 import dayjs from 'dayjs';
 import { dateIsSameOrBeforeCurrentDate } from '@shared/utils/date-is-same-or-before-current-date';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class CreateReservationUseCase {
     constructor(
         private reservationsRepository: ReservationsRepository,

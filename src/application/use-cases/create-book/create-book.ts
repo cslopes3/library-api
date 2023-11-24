@@ -11,7 +11,9 @@ import { PublishersRepository } from '@repository/publishers-repository';
 import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not-exists-error';
 import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { BookAuthorsRepository } from '@repository/book-authors-repository';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class CreateBookUseCase {
     constructor(
         private booksRepository: BooksRepository,

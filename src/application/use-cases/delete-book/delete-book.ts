@@ -3,7 +3,9 @@ import { DeleteBookInputDto } from './delete-book-dto';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { Either, left, right } from '@shared/errors/either';
 import { BookAuthorsRepository } from '@repository/book-authors-repository';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class DeleteBookUseCase {
     constructor(
         private booksRepository: BooksRepository,

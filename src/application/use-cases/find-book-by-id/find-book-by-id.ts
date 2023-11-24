@@ -4,7 +4,9 @@ import {
     FindBookByIdOutputDto,
 } from './find-book-by-id-dto';
 import { Either, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindBookByIdUseCase {
     constructor(private booksRepository: BooksRepository) {}
 

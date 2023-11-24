@@ -117,7 +117,11 @@ export class PrismaBooksRepository implements BooksRepository {
         return book.map(PrismaBookMapper.toDomainLayer);
     }
 
-    async addBookToStock(id: string, amount: number): Promise<void> {
+    async addBookToStock(
+        id: string,
+        amount: number,
+        changeQuantity?: boolean,
+    ): Promise<void> {
         await this.prisma.book.update({
             where: {
                 id,
@@ -126,11 +130,16 @@ export class PrismaBooksRepository implements BooksRepository {
                 available: {
                     increment: amount,
                 },
+                ...(changeQuantity ? { quantity: { increment: amount } } : {}),
             },
         });
     }
 
-    async removeBookFromStock(id: string, amount: number): Promise<void> {
+    async removeBookFromStock(
+        id: string,
+        amount: number,
+        changeQuantity?: boolean,
+    ): Promise<void> {
         await this.prisma.book.update({
             where: {
                 id,
@@ -139,6 +148,7 @@ export class PrismaBooksRepository implements BooksRepository {
                 available: {
                     decrement: amount,
                 },
+                ...(changeQuantity ? { quantity: { decrement: amount } } : {}),
             },
         });
     }

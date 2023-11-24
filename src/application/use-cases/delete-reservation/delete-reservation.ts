@@ -3,7 +3,9 @@ import { DeleteReservationInputDto } from './delete-reservation-dto';
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { BooksRepository } from '@repository/books-repository';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class DeleteReservationUseCase {
     constructor(
         private reservationsRepository: ReservationsRepository,

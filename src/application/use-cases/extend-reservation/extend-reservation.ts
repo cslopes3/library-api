@@ -10,7 +10,9 @@ import { AlreadyExtendedError } from '@usecase/@errors/already-extended-error';
 import { ExpiredDateError } from '@usecase/@errors/expired-date-error';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { dateIsSameOrBeforeCurrentDate } from '@shared/utils/date-is-same-or-before-current-date';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class ExtendReservationUseCase {
     constructor(private reservationsRepository: ReservationsRepository) {}
 

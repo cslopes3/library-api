@@ -3,7 +3,6 @@ import {
     Body,
     ConflictException,
     Controller,
-    HttpCode,
     Post,
     UsePipes,
 } from '@nestjs/common';
@@ -27,7 +26,6 @@ export class CreateAccountController {
     constructor(private registerUser: RegisterUserUseCase) {}
 
     @Post()
-    @HttpCode(201)
     @UsePipes(new ZodValidationPipe(createAccountBodySchema))
     async handle(@Body() body: CreateAccountBodySchema) {
         const { name, email, password } = body;
@@ -45,7 +43,7 @@ export class CreateAccountController {
                 case UserAlreadyExistsError:
                     throw new ConflictException(error.message);
                 default:
-                    throw new BadRequestException(error.message);
+                    throw new BadRequestException();
             }
         }
     }

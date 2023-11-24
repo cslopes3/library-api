@@ -7,7 +7,9 @@ import {
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class ReturnAllItemsFromReservationUseCase {
     constructor(
         private reservationsRepository: ReservationsRepository,

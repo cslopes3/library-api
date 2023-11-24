@@ -6,7 +6,9 @@ import {
 } from './find-reservations-by-user-id-dto';
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { Either, left, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindReservationsByUserIdUseCase {
     constructor(
         private reservationsRepository: ReservationsRepository,

@@ -1,7 +1,8 @@
 import { BadRequestException, Controller, Get, Query } from '@nestjs/common';
 import { ZodValidationPipe } from '@infra/http/pipes/zod-validation-pipe';
 import { z } from 'zod';
-import { FindManyAuthorsUseCase } from '@usecase/find-many-author/find-many-authors';
+import { FindManyAuthorsUseCase } from '@usecase/find-many-authors/find-many-authors';
+import { Public } from '@infra/auth/public';
 
 const pageQueryParamSchema = z
     .string()
@@ -14,6 +15,7 @@ const queryValidationPipe = new ZodValidationPipe(pageQueryParamSchema);
 type PageQueryParamSchema = z.infer<typeof pageQueryParamSchema>;
 
 @Controller('/authors')
+@Public()
 export class FindManyAuthorsController {
     constructor(private findManyAuthor: FindManyAuthorsUseCase) {}
 

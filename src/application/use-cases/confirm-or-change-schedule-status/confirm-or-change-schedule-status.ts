@@ -9,7 +9,9 @@ import { ScheduleStatus } from '@domain/entities/schedule';
 import { Reservation } from '@domain/entities/reservation';
 import { ReservationItem } from '@domain/value-objects/resevation-item';
 import dayjs from 'dayjs';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class ConfirmOrChangeScheduleStatusUseCase {
     constructor(
         private schedulesRepository: SchedulesRepository,

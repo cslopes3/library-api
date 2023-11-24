@@ -18,7 +18,9 @@ import { ScheduleLimitOfSameBookError } from '@usecase/@errors/schedule-limit-of
 import { Schedule, ScheduleStatus } from '@domain/entities/schedule';
 import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error';
 import { ScheduleItem } from '@domain/value-objects/schedule-item';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class CreateReservationScheduleUseCase {
     constructor(
         private schedulesRepository: SchedulesRepository,

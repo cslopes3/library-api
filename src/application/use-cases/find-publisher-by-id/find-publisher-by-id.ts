@@ -4,7 +4,9 @@ import {
     FindPublisherByIdOutputDto,
 } from './find-publisher-by-id-dto';
 import { Either, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindPublisherByIdUseCase {
     constructor(private publishersRepository: PublishersRepository) {}
 

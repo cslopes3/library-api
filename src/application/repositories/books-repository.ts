@@ -11,6 +11,14 @@ export abstract class BooksRepository {
         params: PaginationParams,
         ids?: string[],
     ): Promise<Book[] | []>;
-    abstract addBookToStock(id: string, amount: number): Promise<void>;
-    abstract removeBookFromStock(id: string, amount: number): Promise<void>;
+    abstract addBookToStock(
+        id: string,
+        amount: number,
+        changeQuantity?: boolean,
+    ): Promise<void>;
+    abstract removeBookFromStock(
+        id: string,
+        amount: number,
+        changeQuantity?: boolean,
+    ): Promise<void>;
 }

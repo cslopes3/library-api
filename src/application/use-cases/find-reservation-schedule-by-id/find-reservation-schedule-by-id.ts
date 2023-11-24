@@ -4,7 +4,9 @@ import {
     FindReservationScheduleByIdOutputDto,
 } from './find-reservartion-schedule-dto';
 import { Either, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindReservationScheduleByIdUseCase {
     constructor(private schedulesRepository: SchedulesRepository) {}
 

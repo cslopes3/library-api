@@ -1,4 +1,10 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import {
+    BadRequestException,
+    Body,
+    ConflictException,
+    Controller,
+    Post,
+} from '@nestjs/common';
 import { ZodValidationPipe } from '@infra/http/pipes/zod-validation-pipe';
 import { z } from 'zod';
 import { CreateAuthorUseCase } from '@usecase/create-author/create-author';
@@ -29,9 +35,9 @@ export class CreateAuthorController {
 
             switch (error.constructor) {
                 case AuthorAlreadyExistsError:
-                    throw new AuthorAlreadyExistsError(error.message);
+                    throw new ConflictException(error.message);
                 default:
-                    throw new BadRequestException(error.message);
+                    throw new BadRequestException();
             }
         }
     }

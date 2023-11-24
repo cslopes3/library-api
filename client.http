@@ -1,5 +1,7 @@
 @baseUrl = http://localhost:3333
 @authToken = {{authenticate.response.body.access_token}}
+@authorId = {{find_many_authors.response.body.authors[0].id}}
+@publisherId = {{find_many_publishers.response.body.publishers[0].id}}
 
 # @name create_account
 POST {{baseUrl}}/accounts
@@ -38,7 +40,6 @@ Authorization: Bearer {{authToken}}
 # @name find_many_authors
 GET {{baseUrl}}/authors?page=1
 Content-Type: application/json
-Authorization: Bearer {{authToken}}
 
 {
     
@@ -47,10 +48,110 @@ Authorization: Bearer {{authToken}}
 ###
 
 # @name find_author_by_id
-GET {{baseUrl}}/authors/9a941c97-c9dd-4767-8f82-c86e7f799273
+GET {{baseUrl}}/authors/{{authorId}}
+Content-Type: application/json
+
+{
+    
+}
+
+###
+
+# @name delete_author
+DELETE {{baseUrl}}/authors/{{authorId}}
 Content-Type: application/json
 Authorization: Bearer {{authToken}}
 
 {
     
+}
+
+###
+
+# @name update_author
+PUT {{baseUrl}}/authors/{{authorId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Author Updated"
+}
+
+###
+
+# @name create_publisher
+POST {{baseUrl}}/publishers
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Publisher 1"
+}
+
+###
+
+# @name find_many_publishers
+GET {{baseUrl}}/publishers?page=1
+Content-Type: application/json
+
+{
+    
+}
+
+###
+
+# @name find_publisher_by_id
+GET {{baseUrl}}/publishers/{{publisherId}}
+Content-Type: application/json
+
+{
+    
+}
+
+###
+
+# @name delete_publisher
+DELETE {{baseUrl}}/publishers/{{publisherId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    
+}
+
+###
+
+# @name update_publisher
+PUT {{baseUrl}}/publishers/{{publisherId}}
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Publisher Updated"
+}
+
+###
+
+# @name create_book
+POST {{baseUrl}}/books
+Content-Type: application/json
+Authorization: Bearer {{authToken}}
+
+{
+    "name": "Book",
+    "authors": [
+        {
+            "id": "{{authorId}}",
+            "name": "{{authorId}}"
+        }
+    ],
+    "publisher": {
+        "id": "{{publisherId}}",
+        "name": "{{publisherId}}"
+    },
+    "editionDescription": "Book description",
+    "editionNumber": 1,
+    "editionYear": 2023,
+    "quantity": 10,
+    "pages": 180
 }

@@ -4,7 +4,9 @@ import {
     FindManyBooksOutputDto,
 } from './find-many-books-dto';
 import { Either, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindManyBooksUseCase {
     constructor(private booksRepository: BooksRepository) {}
 

@@ -92,7 +92,7 @@ export class PrismaReservationsRepository implements ReservationsRepository {
                 alreadyExtendTime,
             },
             where: {
-                reservationId: id,
+                id,
             },
         });
     }

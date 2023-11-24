@@ -6,7 +6,9 @@ import {
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class UpdatePublisherUseCase {
     constructor(private publishersRepository: PublishersRepository) {}
 
@@ -16,7 +18,7 @@ export class UpdatePublisherUseCase {
     }: UpdatePublisherInputDto): Promise<
         Either<
             ResourceNotFoundError | PublisherAlreadyExistsError,
-            UpdatePublisherOutputDto | null
+            UpdatePublisherOutputDto
         >
     > {
         const publisher = await this.publishersRepository.findById(id);

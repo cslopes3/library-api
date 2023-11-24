@@ -2,7 +2,9 @@ import { PublishersRepository } from '@repository/publishers-repository';
 import { DeletePublisherInputDto } from './delete-publisher-dto';
 import { Either, left, right } from '@shared/errors/either';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class DeletePublisherUseCase {
     constructor(private publishersRepository: PublishersRepository) {}
 

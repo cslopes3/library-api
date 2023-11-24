@@ -4,7 +4,9 @@ import {
     FindReservationByIdOutputDto,
 } from './find-reservation-by-id-dto';
 import { Either, right } from '@shared/errors/either';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class FindReservationByIdUseCase {
     constructor(private reservationsRespository: ReservationsRepository) {}
 

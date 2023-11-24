@@ -117,4 +117,132 @@ describe('[UT] - Books repository', () => {
             },
         });
     });
+
+    it('should find a book by id', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        const result = await booksRepository.findById(book.id.toString());
+
+        expect(result?.name).toEqual(book.name);
+    });
+
+    it('should return null when not found a book by id', async () => {
+        const result = await booksRepository.findById('1');
+
+        expect(result).toBeNull();
+    });
+
+    it('should find many books', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+        const book2 = await prismaFakeBook.create({
+            name: 'Book 2',
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        const result = await booksRepository.findMany({ page: 1 });
+
+        expect(result).toHaveLength(2);
+        expect(result![0].name).toEqual(book.name);
+        expect(result![1].name).toEqual(book2.name);
+    });
+
+    it('should return an empty array when not found a book at findMany', async () => {
+        const result = await booksRepository.findMany({ page: 1 });
+
+        expect(result).toHaveLength(0);
+    });
+
+    it('should find a book by name', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        const result = await booksRepository.findByName(book.name);
+
+        expect(result?.name).toEqual(book.name);
+    });
+
+    it('should return null when not found a book by name', async () => {
+        const result = await booksRepository.findByName('Book 1');
+
+        expect(result).toBeNull();
+    });
+
+    it('should add book to stock', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        const amount = 10;
+        await booksRepository.addBookToStock(book.id.toString(), amount, true);
+
+        const bookOnDatabase = await prisma.book.findUnique({
+            where: {
+                id: book.id.toString(),
+            },
+        });
+
+        expect(bookOnDatabase?.quantity).toBe(book.quantity + amount);
+        expect(bookOnDatabase?.available).toBe(book.available + amount);
+    });
+
+    it('should remove book from stock', async () => {
+        const publisher = await prismaFakePublisher.create();
+        const author = await prismaFakeAuthor.create();
+        const book = await prismaFakeBook.create({
+            publisher: new BookPublisher(
+                publisher.id.toString(),
+                publisher.name,
+            ),
+            authors: [new BookAuthors(author.id.toString(), author.name)],
+        });
+
+        const amount = 2;
+        await booksRepository.removeBookFromStock(
+            book.id.toString(),
+            amount,
+            true,
+        );
+
+        const bookOnDatabase = await prisma.book.findUnique({
+            where: {
+                id: book.id.toString(),
+            },
+        });
+
+        expect(bookOnDatabase?.quantity).toBe(book.quantity - amount);
+        expect(bookOnDatabase?.available).toBe(book.available - amount);
+    });
 });

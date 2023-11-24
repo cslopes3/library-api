@@ -41,7 +41,7 @@ export class AuthenticateController {
                 case WrongCredentialsError:
                     throw new UnauthorizedException(error.message);
                 default:
-                    throw new BadRequestException(error.message);
+                    throw new BadRequestException();
             }
         }
 
