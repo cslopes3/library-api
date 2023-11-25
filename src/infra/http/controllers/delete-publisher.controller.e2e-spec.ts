@@ -39,7 +39,10 @@ describe('[E2E] - Delete publisher', () => {
 
         const publisher = await prismaFakePublisher.create();
 
-        const accessToken = jwt.sign({ sub: user.id.toString() });
+        const accessToken = jwt.sign({
+            sub: user.id.toString(),
+            role: user.role.toString(),
+        });
 
         const response = await request(app.getHttpServer())
             .delete(`/publishers/${publisher.id.toString()}`)

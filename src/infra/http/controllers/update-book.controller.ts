@@ -7,6 +7,7 @@ import {
     NotFoundException,
     Param,
     Put,
+    UseGuards,
 } from '@nestjs/common';
 import { UpdateBookUseCase } from '@usecase/update-book/update-book';
 import { z } from 'zod';
@@ -15,6 +16,9 @@ import { BookAlreadyExistsError } from '@usecase/@errors/book-already-exists-err
 import { AuthorDoesNotExistsError } from '@usecase/@errors/author-does-not-exists-error';
 import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not-exists-error';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
+import { Role } from '@infra/auth/role';
+import { UserRole } from '@shared/utils/user-role';
+import { RoleGuard } from '@infra/auth/role.guard';
 
 const updateBookBodySchema = z.object({
     name: z.string(),
@@ -40,6 +44,8 @@ type UpdateBookBodySchema = z.infer<typeof updateBookBodySchema>;
 const bodyValidationPipe = new ZodValidationPipe(updateBookBodySchema);
 
 @Controller('/books/:id')
+@Role(UserRole.ADMIN)
+@UseGuards(RoleGuard)
 export class UpdateBookController {
     constructor(private updateBook: UpdateBookUseCase) {}
 

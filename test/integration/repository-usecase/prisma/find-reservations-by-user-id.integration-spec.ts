@@ -69,6 +69,7 @@ describe('[IT] - Find reservation by user id', () => {
 
         const result = await findReservationsByUserIdUseCase.execute({
             userId: reservation.userId,
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -80,6 +81,7 @@ describe('[IT] - Find reservation by user id', () => {
 
         const result = await findReservationsByUserIdUseCase.execute({
             userId: user.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

@@ -7,10 +7,14 @@ import {
     ConflictException,
     Controller,
     Post,
+    UseGuards,
 } from '@nestjs/common';
 import { BookAlreadyExistsError } from '@usecase/@errors/book-already-exists-error';
 import { AuthorDoesNotExistsError } from '@usecase/@errors/author-does-not-exists-error';
 import { PublisherDoesNotExistsError } from '@usecase/@errors/publisher-does-not-exists-error';
+import { UserRole } from '@shared/utils/user-role';
+import { Role } from '@infra/auth/role';
+import { RoleGuard } from '@infra/auth/role.guard';
 
 const createBookBodySchema = z.object({
     name: z.string(),
@@ -36,6 +40,8 @@ type CreateBookBodySchema = z.infer<typeof createBookBodySchema>;
 const bodyValidationPipe = new ZodValidationPipe(createBookBodySchema);
 
 @Controller('/books')
+@Role(UserRole.ADMIN)
+@UseGuards(RoleGuard)
 export class CreateBookController {
     constructor(private createBook: CreateBookUseCase) {}
 

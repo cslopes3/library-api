@@ -1,5 +1,6 @@
 export interface ExtendReservationInputDto {
     id: string;
+    currentUserId: string;
 }
 
 export interface ExtendReservationOutputDto {

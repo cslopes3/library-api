@@ -1,5 +1,6 @@
 import { User } from '@domain/entities/user';
 import { User as PrismaUser, Prisma } from '@prisma/client';
+import { UserRole } from '@shared/utils/user-role';
 
 export class PrismaUserMapper {
     static toDomainLayer(raw: PrismaUser): User {
@@ -8,6 +9,7 @@ export class PrismaUserMapper {
                 name: raw.name,
                 email: raw.email,
                 password: raw.password,
+                role: raw.role as UserRole,
             },
             raw.id,
         );
@@ -19,6 +21,7 @@ export class PrismaUserMapper {
             name: user.name,
             email: user.email,
             password: user.password,
+            role: user.role,
         };
     }
 }

@@ -7,6 +7,7 @@ import {
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { Either, left, right } from '@shared/errors/either';
 import { Injectable } from '@nestjs/common';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 @Injectable()
 export class FindReservationsByUserIdUseCase {
@@ -17,13 +18,26 @@ export class FindReservationsByUserIdUseCase {
 
     async execute({
         userId,
+        currentUserId,
     }: FindReservationsByUserIdInputDto): Promise<
-        Either<UserDoesNotExistsError, FindReservationsByUserIdOutputDto[] | []>
+        Either<
+            UserDoesNotExistsError | NotAllowedError,
+            FindReservationsByUserIdOutputDto[] | []
+        >
     > {
         const user = await this.usersRepository.findById(userId);
 
         if (!user) {
             return left(new UserDoesNotExistsError());
+        }
+
+        const currentUser = await this.usersRepository.findById(currentUserId);
+
+        if (
+            currentUser?.role !== 'admin' &&
+            currentUserId !== user.id.toString()
+        ) {
+            return left(new NotAllowedError());
         }
 
         const reservations =

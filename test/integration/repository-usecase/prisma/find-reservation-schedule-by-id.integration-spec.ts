@@ -2,6 +2,7 @@ import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { ScheduleItem } from '@domain/value-objects/schedule-item';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaSchedulesRepository } from '@infra/database/prisma/repositories/prisma-schedule-repository';
+import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
 import { FindReservationScheduleByIdUseCase } from '@usecase/find-reservation-schedule-by-id/find-reservation-schedule-by-id';
 import { PrismaFakeBook } from 'test/factories/fake-book-factory';
 import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
@@ -14,6 +15,7 @@ import {
 
 let prisma: PrismaService;
 let schedulesRepository: PrismaSchedulesRepository;
+let usersRepository: PrismaUsersRepository;
 let findReservationScheduleByIdUseCase: FindReservationScheduleByIdUseCase;
 let prismaFakeUser: PrismaFakeUser;
 let prismaFakePublisher: PrismaFakePublisher;
@@ -25,8 +27,12 @@ describe('[IT] - Find reservation schedule by id', () => {
         prisma = new PrismaService();
         startEnvironment();
         schedulesRepository = new PrismaSchedulesRepository(prisma);
+        usersRepository = new PrismaUsersRepository(prisma);
         findReservationScheduleByIdUseCase =
-            new FindReservationScheduleByIdUseCase(schedulesRepository);
+            new FindReservationScheduleByIdUseCase(
+                schedulesRepository,
+                usersRepository,
+            );
 
         prismaFakeUser = new PrismaFakeUser(prisma);
         prismaFakePublisher = new PrismaFakePublisher(prisma);
@@ -54,6 +60,7 @@ describe('[IT] - Find reservation schedule by id', () => {
 
         const result = await findReservationScheduleByIdUseCase.execute({
             id: schedule.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -77,6 +84,7 @@ describe('[IT] - Find reservation schedule by id', () => {
     it('should return null when schedule is not found', async () => {
         const result = await findReservationScheduleByIdUseCase.execute({
             id: '1',
+            currentUserId: '1',
         });
 
         expect(result.isRight()).toBeTruthy();

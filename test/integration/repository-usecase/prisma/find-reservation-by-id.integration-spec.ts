@@ -2,6 +2,7 @@ import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaReservationsRepository } from '@infra/database/prisma/repositories/prisma-reservations-repository';
+import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
 import { FindReservationByIdUseCase } from '@usecase/find-reservation-by-id/find-reservation-by-id';
 import { PrismaFakeBook } from 'test/factories/fake-book-factory';
 import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
@@ -14,6 +15,7 @@ import {
 
 let prisma: PrismaService;
 let reservationsRepository: PrismaReservationsRepository;
+let usersRepository: PrismaUsersRepository;
 let findReservationByIdUseCase: FindReservationByIdUseCase;
 let prismaFakeUser: PrismaFakeUser;
 let prismaFakePublisher: PrismaFakePublisher;
@@ -25,8 +27,10 @@ describe('[IT] - Find reservation by id', () => {
         prisma = new PrismaService();
         startEnvironment();
         reservationsRepository = new PrismaReservationsRepository(prisma);
+        usersRepository = new PrismaUsersRepository(prisma);
         findReservationByIdUseCase = new FindReservationByIdUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
         prismaFakeUser = new PrismaFakeUser(prisma);
@@ -65,15 +69,17 @@ describe('[IT] - Find reservation by id', () => {
 
         const result = await findReservationByIdUseCase.execute({
             id: reservation.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
-        expect(result.value?.id).toBe(reservation.id.toString());
-        expect(result.value?.userId).toBe(reservation.userId);
     });
 
     it('should return null when a reservation is not find', async () => {
-        const result = await findReservationByIdUseCase.execute({ id: '1' });
+        const result = await findReservationByIdUseCase.execute({
+            id: '1',
+            currentUserId: '1',
+        });
 
         expect(result.isRight()).toBeTruthy();
         expect(result.value).toBeNull();

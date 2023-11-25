@@ -61,6 +61,7 @@ describe('[IT] - Find last thirty days schedule by user id', () => {
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
             userId: schedule.userId,
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -72,6 +73,7 @@ describe('[IT] - Find last thirty days schedule by user id', () => {
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
             userId: user.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

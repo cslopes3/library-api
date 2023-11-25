@@ -14,6 +14,9 @@ import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error
 import { ReserveLimitError } from '@usecase/@errors/reserve-limit-error';
 import { ScheduleLimitOfSameBookError } from '@usecase/@errors/schedule-limit-of-same-book-error';
 import { ScheduleDeadlineError } from '@usecase/@errors/schedule-deadline-error';
+import { CurrentUser } from '@infra/auth/current-user-decorator';
+import { UserPayload } from '@infra/auth/jwt.strategy';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 const createScheduleBodySchema = z.object({
     date: z.coerce.date(),
@@ -35,8 +38,17 @@ export class CreateScheduleController {
     constructor(private createSchedule: CreateReservationScheduleUseCase) {}
 
     @Post()
-    async handle(@Body(bodyValidationPipe) body: CreateScheduleBodySchema) {
-        const result = await this.createSchedule.execute(body);
+    async handle(
+        @Body(bodyValidationPipe) body: CreateScheduleBodySchema,
+        @CurrentUser() user: UserPayload,
+    ) {
+        const { date, userId, scheduleItems } = body;
+        const result = await this.createSchedule.execute({
+            date,
+            userId,
+            scheduleItems,
+            currentUserId: user.sub,
+        });
 
         if (result.isLeft()) {
             const error = result.value;
@@ -47,7 +59,8 @@ export class CreateScheduleController {
                 case ReserveLimitError ||
                     ScheduleDeadlineError ||
                     BookNotAvailableError ||
-                    ScheduleLimitOfSameBookError:
+                    ScheduleLimitOfSameBookError ||
+                    NotAllowedError:
                     throw new BadRequestException(error.message);
                 default:
                     throw new BadRequestException();

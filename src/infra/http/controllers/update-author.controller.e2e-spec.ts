@@ -37,7 +37,10 @@ describe('[E2E] - Update author', () => {
             password: await hash('123456', 8),
         });
 
-        const accessToken = jwt.sign({ sub: user.id.toString() });
+        const accessToken = jwt.sign({
+            sub: user.id.toString(),
+            role: user.role.toString(),
+        });
 
         const updatedName = 'Updated Name';
         const author = await prismaFakeAuthor.create();

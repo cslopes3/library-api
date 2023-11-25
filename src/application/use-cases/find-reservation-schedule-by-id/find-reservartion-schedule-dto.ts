@@ -1,5 +1,6 @@
 export interface FindReservationScheduleByIdInputDto {
     id: string;
+    currentUserId: string;
 }
 
 export interface FindReservationScheduleByIdOutputDto {

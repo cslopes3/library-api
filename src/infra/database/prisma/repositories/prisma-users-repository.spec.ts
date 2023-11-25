@@ -38,6 +38,7 @@ describe('[UT] - Users repository', () => {
                 name: user.name,
                 email: user.email,
                 password: expect.any(String),
+                role: user.role.toString(),
             },
         });
     });

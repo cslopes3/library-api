@@ -10,9 +10,13 @@ import {
     NotFoundException,
     Param,
     Put,
+    UseGuards,
 } from '@nestjs/common';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { PublisherAlreadyExistsError } from '@usecase/@errors/publisher-already-exists-error';
+import { Role } from '@infra/auth/role';
+import { UserRole } from '@shared/utils/user-role';
+import { RoleGuard } from '@infra/auth/role.guard';
 
 const updatePublisherBodySchema = z.object({
     name: z.string(),
@@ -23,6 +27,8 @@ type UpdatePublisherBodySchema = z.infer<typeof updatePublisherBodySchema>;
 const bodyValidationPipe = new ZodValidationPipe(updatePublisherBodySchema);
 
 @Controller('/publishers/:id')
+@Role(UserRole.ADMIN)
+@UseGuards(RoleGuard)
 export class UpdatePublisherController {
     constructor(private updatePublisher: UpdatePublisherUseCase) {}
 

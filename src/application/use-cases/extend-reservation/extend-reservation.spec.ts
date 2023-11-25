@@ -6,26 +6,38 @@ import { ExpiredDateError } from '@usecase/@errors/expired-date-error';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { ReservationsMockRepository } from '@mocks/mock-reservations-repository';
 import { createFakeReservation } from 'test/factories/fake-reservation-factory';
+import { UsersMockRepository } from '@mocks/mock-users-repository';
+import { UserRole } from '@shared/utils/user-role';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
+import { createFakeUser } from 'test/factories/fake-user-factory';
 
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
+let usersRepository: ReturnType<typeof UsersMockRepository>;
 
 describe('[UT] - Extend Reservation by id use case', () => {
     beforeEach(() => {
         reservationsRepository = ReservationsMockRepository();
+        usersRepository = UsersMockRepository();
     });
 
     it('should extend the reservation period', async () => {
-        const reservation = createFakeReservation();
+        const user = createFakeUser();
+        const reservation = createFakeReservation({
+            userId: user.id.toString(),
+        });
 
         reservationsRepository.findById.mockResolvedValue(reservation);
         reservationsRepository.findByUserId.mockResolvedValue([reservation]);
+        usersRepository.findById.mockResolvedValue(user);
 
         const extendReservation = new ExtendReservationUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
         const result = await extendReservation.execute({
             id: reservation.id.toString(),
+            currentUserId: reservation.userId,
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -50,16 +62,22 @@ describe('[UT] - Extend Reservation by id use case', () => {
     it('should return error when reservation is not found', async () => {
         const extendReservation = new ExtendReservationUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
-        const result = await extendReservation.execute({ id: '1' });
+        const result = await extendReservation.execute({
+            id: '1',
+            currentUserId: '1',
+        });
 
         expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ResourceNotFoundError);
     });
 
     it('should not extend the reservation period more than one time', async () => {
+        const user = createFakeUser();
         const reservation = createFakeReservation({
+            userId: user.id.toString(),
             reservationItem: [
                 new ReservationItem(
                     '1',
@@ -73,13 +91,16 @@ describe('[UT] - Extend Reservation by id use case', () => {
 
         reservationsRepository.findById.mockResolvedValue(reservation);
         reservationsRepository.findByUserId.mockResolvedValue([reservation]);
+        usersRepository.findById.mockResolvedValue(user);
 
         const extendReservation = new ExtendReservationUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
         const result = await extendReservation.execute({
             id: reservation.id.toString(),
+            currentUserId: reservation.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -87,7 +108,9 @@ describe('[UT] - Extend Reservation by id use case', () => {
     });
 
     it('should not extend the reservation when it has a expired date', async () => {
+        const user = createFakeUser();
         const reservation = createFakeReservation({
+            userId: user.id.toString(),
             reservationItem: [
                 new ReservationItem(
                     '1',
@@ -108,13 +131,16 @@ describe('[UT] - Extend Reservation by id use case', () => {
 
         reservationsRepository.findById.mockResolvedValue(reservation);
         reservationsRepository.findByUserId.mockResolvedValue([reservation]);
+        usersRepository.findById.mockResolvedValue(user);
 
         const extendReservation = new ExtendReservationUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
         const result = await extendReservation.execute({
             id: reservation.id.toString(),
+            currentUserId: reservation.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -122,7 +148,9 @@ describe('[UT] - Extend Reservation by id use case', () => {
     });
 
     it('should not extend the reservation when all items were returned', async () => {
+        const user = createFakeUser();
         const reservation = createFakeReservation({
+            userId: user.id.toString(),
             reservationItem: [
                 new ReservationItem(
                     '1',
@@ -143,16 +171,43 @@ describe('[UT] - Extend Reservation by id use case', () => {
 
         reservationsRepository.findById.mockResolvedValue(reservation);
         reservationsRepository.findByUserId.mockResolvedValue([reservation]);
+        usersRepository.findById.mockResolvedValue(user);
 
         const extendReservation = new ExtendReservationUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
         const result = await extendReservation.execute({
             id: reservation.id.toString(),
+            currentUserId: reservation.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(AllItemsAlreadyReturnedError);
+    });
+
+    it('should return error when user is not the admin or the owner', async () => {
+        const user = createFakeUser({ role: 'user' as UserRole });
+        const currentUser = createFakeUser({ role: 'user' as UserRole });
+        const reservation = createFakeReservation({
+            userId: user.id.toString(),
+        });
+
+        reservationsRepository.findById.mockResolvedValue(reservation);
+        usersRepository.findById.mockResolvedValue(currentUser);
+
+        const extendReservation = new ExtendReservationUseCase(
+            reservationsRepository,
+            usersRepository,
+        );
+
+        const result = await extendReservation.execute({
+            id: reservation.id.toString(),
+            currentUserId: currentUser.id.toString(),
+        });
+
+        expect(result.isLeft()).toBeTruthy();
+        expect(result.value).toBeInstanceOf(NotAllowedError);
     });
 });

@@ -156,7 +156,7 @@ describe('[UT] - Reservations repository', () => {
                 alreadyExtendTime: true,
             },
             where: {
-                id: reservation.reservationItem[0].id.toString(),
+                id: reservation.id.toString(),
             },
         });
     });

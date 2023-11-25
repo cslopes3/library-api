@@ -10,6 +10,8 @@ import { Reservation } from '@domain/entities/reservation';
 import { ReservationItem } from '@domain/value-objects/resevation-item';
 import dayjs from 'dayjs';
 import { Injectable } from '@nestjs/common';
+import { UsersRepository } from '@repository/users-repository';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 @Injectable()
 export class ConfirmOrChangeScheduleStatusUseCase {
@@ -17,18 +19,29 @@ export class ConfirmOrChangeScheduleStatusUseCase {
         private schedulesRepository: SchedulesRepository,
         private reservationsRepository: ReservationsRepository,
         private booksRepository: BooksRepository,
+        private usersRepository: UsersRepository,
     ) {}
 
     async execute({
         id,
         status,
+        currentUserId,
     }: ConfirmOrChangeStatusInputDto): Promise<
-        Either<ResourceNotFoundError | CantChangeStatusError, null>
+        Either<
+            ResourceNotFoundError | CantChangeStatusError | NotAllowedError,
+            null
+        >
     > {
         const schedule = await this.schedulesRepository.findById(id);
 
         if (!schedule) {
             return left(new ResourceNotFoundError());
+        }
+
+        const user = await this.usersRepository.findById(currentUserId);
+
+        if (user?.role !== 'admin' && currentUserId !== schedule.userId) {
+            return left(new NotAllowedError());
         }
 
         if (schedule.status !== ScheduleStatus.pending) {

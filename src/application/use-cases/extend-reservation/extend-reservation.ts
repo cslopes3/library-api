@@ -11,19 +11,26 @@ import { ExpiredDateError } from '@usecase/@errors/expired-date-error';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { dateIsSameOrBeforeCurrentDate } from '@shared/utils/date-is-same-or-before-current-date';
 import { Injectable } from '@nestjs/common';
+import { UsersRepository } from '@repository/users-repository';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 @Injectable()
 export class ExtendReservationUseCase {
-    constructor(private reservationsRepository: ReservationsRepository) {}
+    constructor(
+        private reservationsRepository: ReservationsRepository,
+        private usersRepository: UsersRepository,
+    ) {}
 
     async execute({
         id,
+        currentUserId,
     }: ExtendReservationInputDto): Promise<
         Either<
             | ResourceNotFoundError
             | AlreadyExtendedError
             | ExpiredDateError
-            | AllItemsAlreadyReturnedError,
+            | AllItemsAlreadyReturnedError
+            | NotAllowedError,
             ExtendReservationOutputDto
         >
     > {
@@ -31,6 +38,12 @@ export class ExtendReservationUseCase {
 
         if (!reservation) {
             return left(new ResourceNotFoundError());
+        }
+
+        const user = await this.usersRepository.findById(currentUserId);
+
+        if (user?.role !== 'admin' && currentUserId !== reservation.userId) {
+            return left(new NotAllowedError());
         }
 
         const allUserReservations =

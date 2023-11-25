@@ -5,6 +5,7 @@ export interface CreateReservationScheduleInputDto {
         bookId: string;
         name: string;
     }[];
+    currentUserId: string;
 }
 
 export interface CreateReservationScheduleOutputDto {

@@ -11,9 +11,12 @@ import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
 import { PrismaFakeReservation } from 'test/factories/fake-reservation-factory';
 import { PrismaFakeUser } from 'test/factories/fake-user-factory';
 import request from 'supertest';
+import { JwtService } from '@nestjs/jwt';
+import { hash } from 'bcryptjs';
 
 describe('[E2E] - Find reservation by id', () => {
     let app: INestApplication;
+    let jwt: JwtService;
     let prismaFakeUser: PrismaFakeUser;
     let prismaFakeAuthor: PrismaFakeAuthor;
     let prismaFakeBook: PrismaFakeBook;
@@ -33,6 +36,7 @@ describe('[E2E] - Find reservation by id', () => {
         }).compile();
 
         app = moduleRef.createNestApplication();
+        jwt = moduleRef.get(JwtService);
 
         prismaFakeUser = moduleRef.get(PrismaFakeUser);
         prismaFakeBook = moduleRef.get(PrismaFakeBook);
@@ -45,7 +49,12 @@ describe('[E2E] - Find reservation by id', () => {
 
     test('[GET] /reservations/:id', async () => {
         const user = await prismaFakeUser.create({
-            password: '123456',
+            password: await hash('123456', 8),
+        });
+
+        const accessToken = jwt.sign({
+            sub: user.id.toString(),
+            role: user.role.toString(),
         });
 
         const publisher = await prismaFakePublisher.create();
@@ -73,6 +82,7 @@ describe('[E2E] - Find reservation by id', () => {
 
         const response = await request(app.getHttpServer())
             .get(`/reservations/${reservation.id.toString()}`)
+            .set('Authorization', `Bearer ${accessToken}`)
             .send();
 
         expect(response.statusCode).toBe(200);

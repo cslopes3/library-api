@@ -2,6 +2,7 @@ import { BookPublisher } from '@domain/value-objects/book-publisher';
 import { ReservationItem } from '@domain/value-objects/resevation-item';
 import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaReservationsRepository } from '@infra/database/prisma/repositories/prisma-reservations-repository';
+import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
 import { ExtendReservationUseCase } from '@usecase/extend-reservation/extend-reservation';
 import { PrismaFakeBook } from 'test/factories/fake-book-factory';
 import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
@@ -14,6 +15,7 @@ import {
 
 let prisma: PrismaService;
 let reservationsRepository: PrismaReservationsRepository;
+let usersRepository: PrismaUsersRepository;
 let extendReservationUseCase: ExtendReservationUseCase;
 let prismaFakeUser: PrismaFakeUser;
 let prismaFakePublisher: PrismaFakePublisher;
@@ -25,8 +27,10 @@ describe('[IT] - Extend reservation ', () => {
         prisma = new PrismaService();
         startEnvironment();
         reservationsRepository = new PrismaReservationsRepository(prisma);
+        usersRepository = new PrismaUsersRepository(prisma);
         extendReservationUseCase = new ExtendReservationUseCase(
             reservationsRepository,
+            usersRepository,
         );
 
         prismaFakeUser = new PrismaFakeUser(prisma);
@@ -65,6 +69,7 @@ describe('[IT] - Extend reservation ', () => {
 
         const result = await extendReservationUseCase.execute({
             id: reservation.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

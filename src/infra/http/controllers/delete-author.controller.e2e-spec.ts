@@ -39,7 +39,10 @@ describe('[E2E] - Delete author', () => {
 
         const author = await prismaFakeAuthor.create();
 
-        const accessToken = jwt.sign({ sub: user.id.toString() });
+        const accessToken = jwt.sign({
+            sub: user.id.toString(),
+            role: user.role.toString(),
+        });
 
         const response = await request(app.getHttpServer())
             .delete(`/authors/${author.id.toString()}`)

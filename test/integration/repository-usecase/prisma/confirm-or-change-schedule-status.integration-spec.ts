@@ -4,6 +4,7 @@ import { PrismaService } from '@infra/database/prisma/prisma.service';
 import { PrismaBooksRepository } from '@infra/database/prisma/repositories/prisma-books-repository';
 import { PrismaReservationsRepository } from '@infra/database/prisma/repositories/prisma-reservations-repository';
 import { PrismaSchedulesRepository } from '@infra/database/prisma/repositories/prisma-schedule-repository';
+import { PrismaUsersRepository } from '@infra/database/prisma/repositories/prisma-users-repository';
 import { ConfirmOrChangeScheduleStatusUseCase } from '@usecase/confirm-or-change-schedule-status/confirm-or-change-schedule-status';
 import { PrismaFakeBook } from 'test/factories/fake-book-factory';
 import { PrismaFakePublisher } from 'test/factories/fake-publisher-factory';
@@ -18,6 +19,7 @@ let prisma: PrismaService;
 let schedulesRepository: PrismaSchedulesRepository;
 let reservationsRepository: PrismaReservationsRepository;
 let booksRepository: PrismaBooksRepository;
+let usersRepository: PrismaUsersRepository;
 let confirmOrChangeScheduleStatusUseCase: ConfirmOrChangeScheduleStatusUseCase;
 let prismaFakeUser: PrismaFakeUser;
 let prismaFakePublisher: PrismaFakePublisher;
@@ -31,12 +33,14 @@ describe('[IT] - Confirm or change status', () => {
         schedulesRepository = new PrismaSchedulesRepository(prisma);
         reservationsRepository = new PrismaReservationsRepository(prisma);
         booksRepository = new PrismaBooksRepository(prisma);
+        usersRepository = new PrismaUsersRepository(prisma);
 
         confirmOrChangeScheduleStatusUseCase =
             new ConfirmOrChangeScheduleStatusUseCase(
                 schedulesRepository,
                 reservationsRepository,
                 booksRepository,
+                usersRepository,
             );
 
         prismaFakeUser = new PrismaFakeUser(prisma);
@@ -69,6 +73,7 @@ describe('[IT] - Confirm or change status', () => {
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
             id: schedule.id.toString(),
             status: 'canceled',
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -95,6 +100,7 @@ describe('[IT] - Confirm or change status', () => {
         const result = await confirmOrChangeScheduleStatusUseCase.execute({
             id: schedule.id.toString(),
             status: 'finished',
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

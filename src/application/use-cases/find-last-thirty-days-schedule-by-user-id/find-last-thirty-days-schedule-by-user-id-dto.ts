@@ -1,5 +1,6 @@
 export interface FindLastThirtyDaysScheduleByUserIdInputDto {
     userId: string;
+    currentUserId: string;
 }
 
 export interface FindLastThirtyDaysScheduleByUserIdOutputDto {

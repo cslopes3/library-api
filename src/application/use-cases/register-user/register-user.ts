@@ -8,6 +8,7 @@ import {
     RegisterUserOutputDto,
 } from './register-user-dto';
 import { Either, left, right } from '@shared/errors/either';
+import { UserRole } from '@shared/utils/user-role';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -20,6 +21,7 @@ export class RegisterUserUseCase {
         name,
         email,
         password,
+        role,
     }: RegisterUserInputDto): Promise<
         Either<UserAlreadyExistsError, RegisterUserOutputDto>
     > {
@@ -35,6 +37,7 @@ export class RegisterUserUseCase {
             name,
             email,
             password: hashedPassword,
+            role: (role ?? 'user') as UserRole,
         });
 
         await this.usersRepository.create(user);

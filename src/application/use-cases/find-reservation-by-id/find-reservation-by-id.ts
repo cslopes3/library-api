@@ -3,22 +3,34 @@ import {
     FindReservationByIdInputDto,
     FindReservationByIdOutputDto,
 } from './find-reservation-by-id-dto';
-import { Either, right } from '@shared/errors/either';
+import { Either, left, right } from '@shared/errors/either';
 import { Injectable } from '@nestjs/common';
+import { UsersRepository } from '@repository/users-repository';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 @Injectable()
 export class FindReservationByIdUseCase {
-    constructor(private reservationsRespository: ReservationsRepository) {}
+    constructor(
+        private reservationsRespository: ReservationsRepository,
+        private usersRepository: UsersRepository,
+    ) {}
 
     async execute({
         id,
+        currentUserId,
     }: FindReservationByIdInputDto): Promise<
-        Either<null, FindReservationByIdOutputDto | null>
+        Either<NotAllowedError, FindReservationByIdOutputDto | null>
     > {
         const reservation = await this.reservationsRespository.findById(id);
 
         if (!reservation) {
             return right(null);
+        }
+
+        const user = await this.usersRepository.findById(currentUserId);
+
+        if (user?.role !== 'admin' && currentUserId !== reservation.userId) {
+            return left(new NotAllowedError());
         }
 
         return right({

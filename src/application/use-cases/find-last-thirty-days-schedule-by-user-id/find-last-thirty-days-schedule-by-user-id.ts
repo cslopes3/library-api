@@ -8,6 +8,7 @@ import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-er
 import { Either, left, right } from '@shared/errors/either';
 import dayjs from 'dayjs';
 import { Injectable } from '@nestjs/common';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 @Injectable()
 export class FindLastThirtyScheduleByUserIdUseCase {
@@ -18,9 +19,10 @@ export class FindLastThirtyScheduleByUserIdUseCase {
 
     async execute({
         userId,
+        currentUserId,
     }: FindLastThirtyDaysScheduleByUserIdInputDto): Promise<
         Either<
-            UserDoesNotExistsError,
+            UserDoesNotExistsError | NotAllowedError,
             FindLastThirtyDaysScheduleByUserIdOutputDto[] | []
         >
     > {
@@ -28,6 +30,15 @@ export class FindLastThirtyScheduleByUserIdUseCase {
 
         if (!user) {
             return left(new UserDoesNotExistsError());
+        }
+
+        const currentUser = await this.usersRepository.findById(currentUserId);
+
+        if (
+            currentUser?.role !== 'admin' &&
+            currentUserId !== user.id.toString()
+        ) {
+            return left(new NotAllowedError());
         }
 
         const currentDateSubtractThirtyDays = dayjs()

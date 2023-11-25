@@ -1,3 +1,5 @@
+import { Role } from '@infra/auth/role';
+import { RoleGuard } from '@infra/auth/role.guard';
 import {
     BadRequestException,
     Controller,
@@ -5,12 +7,16 @@ import {
     NotFoundException,
     Param,
     Patch,
+    UseGuards,
 } from '@nestjs/common';
+import { UserRole } from '@shared/utils/user-role';
 import { AllItemsAlreadyReturnedError } from '@usecase/@errors/all-items-already-returned-error';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { ReturnByItemIdUseCase } from '@usecase/return-by-item-id/return-by-item-id';
 
 @Controller('/reservations/return-item/:id')
+@Role(UserRole.ADMIN)
+@UseGuards(RoleGuard)
 export class ReturnByItemIdController {
     constructor(private returnByItemId: ReturnByItemIdUseCase) {}
 

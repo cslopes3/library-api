@@ -6,12 +6,16 @@ import {
     NotFoundException,
     Param,
     Patch,
+    UseGuards,
 } from '@nestjs/common';
 import { z } from 'zod';
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { RemoveBookFromStockUseCase } from '@usecase/remove-book-from-stock/remove-book-from-stock';
 import { CantRemoveFromStockError } from '@usecase/@errors/cant-remove-from-stock-error';
+import { RoleGuard } from '@infra/auth/role.guard';
+import { UserRole } from '@shared/utils/user-role';
+import { Role } from '@infra/auth/role';
 
 const removeBookFromStockBodySchema = z.object({
     amount: z.number(),
@@ -24,6 +28,8 @@ type RemoveBookFromStockBodySchema = z.infer<
 const bodyValidationPipe = new ZodValidationPipe(removeBookFromStockBodySchema);
 
 @Controller('/books/remove-from-stock/:id')
+@Role(UserRole.ADMIN)
+@UseGuards(RoleGuard)
 export class RemoveBookFromStockController {
     constructor(private removeBookFromStock: RemoveBookFromStockUseCase) {}
 

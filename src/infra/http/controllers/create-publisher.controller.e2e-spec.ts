@@ -34,7 +34,10 @@ describe('[E2E] - Create publisher', () => {
             password: await hash('123456', 8),
         });
 
-        const accessToken = jwt.sign({ sub: user.id.toString() });
+        const accessToken = jwt.sign({
+            sub: user.id.toString(),
+            role: user.role.toString(),
+        });
 
         const response = await request(app.getHttpServer())
             .post('/publishers')

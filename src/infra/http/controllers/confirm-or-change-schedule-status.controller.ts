@@ -12,6 +12,9 @@ import { z } from 'zod';
 import { ZodValidationPipe } from '../pipes/zod-validation-pipe';
 import { ResourceNotFoundError } from '@usecase/@errors/resource-not-found-error';
 import { CantChangeStatusError } from '@usecase/@errors/cant-change-status-error';
+import { UserPayload } from '@infra/auth/jwt.strategy';
+import { CurrentUser } from '@infra/auth/current-user-decorator';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 const confirmOrChangeScheduleStatusBodySchema = z.object({
     status: z.string(),
@@ -35,6 +38,7 @@ export class ConfirmOrChangeScheduleStatusController {
     @HttpCode(204)
     async handle(
         @Param('id') id: string,
+        @CurrentUser() user: UserPayload,
         @Body(bodyValidationPipe) body: ConfirmOrChangeScheduleStatusBodySchema,
     ) {
         const { status } = body;
@@ -42,6 +46,7 @@ export class ConfirmOrChangeScheduleStatusController {
         const result = await this.confirmOrChangeScheduleStatus.execute({
             id,
             status,
+            currentUserId: user.sub,
         });
 
         if (result.isLeft()) {
@@ -50,7 +55,7 @@ export class ConfirmOrChangeScheduleStatusController {
             switch (error.constructor) {
                 case ResourceNotFoundError:
                     throw new NotFoundException(error.message);
-                case CantChangeStatusError:
+                case CantChangeStatusError || NotAllowedError:
                     throw new BadRequestException(error.message);
                 default:
                     throw new BadRequestException();

@@ -68,6 +68,7 @@ describe('[IT] - Create reservation schedule', () => {
                     name: book.name,
                 },
             ],
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();

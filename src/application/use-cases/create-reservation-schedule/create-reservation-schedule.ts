@@ -19,6 +19,7 @@ import { Schedule, ScheduleStatus } from '@domain/entities/schedule';
 import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error';
 import { ScheduleItem } from '@domain/value-objects/schedule-item';
 import { Injectable } from '@nestjs/common';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 @Injectable()
 export class CreateReservationScheduleUseCase {
@@ -33,6 +34,7 @@ export class CreateReservationScheduleUseCase {
         date,
         userId,
         scheduleItems,
+        currentUserId,
     }: CreateReservationScheduleInputDto): Promise<
         Either<
             | UserDoesNotExistsError
@@ -40,7 +42,8 @@ export class CreateReservationScheduleUseCase {
             | BookNotAvailableError
             | ScheduleDeadlineError
             | ReserveLimitError
-            | ScheduleLimitOfSameBookError,
+            | ScheduleLimitOfSameBookError
+            | NotAllowedError,
             CreateReservationScheduleOutputDto
         >
     > {
@@ -48,6 +51,15 @@ export class CreateReservationScheduleUseCase {
 
         if (!user) {
             return left(new UserDoesNotExistsError());
+        }
+
+        const currentUser = await this.usersRepository.findById(currentUserId);
+
+        if (
+            currentUser?.role !== 'admin' &&
+            currentUserId !== user.id.toString()
+        ) {
+            return left(new NotAllowedError());
         }
 
         const bookIds = scheduleItems.map((book) => book.bookId);

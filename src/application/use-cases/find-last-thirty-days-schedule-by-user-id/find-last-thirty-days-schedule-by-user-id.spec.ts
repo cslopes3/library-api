@@ -4,6 +4,8 @@ import { SchedulesMockRepository } from '@mocks/mock-schedules-repository';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
 import { createFakeUser } from 'test/factories/fake-user-factory';
 import { createFakeSchedule } from 'test/factories/fake-schedule-factory';
+import { UserRole } from '@shared/utils/user-role';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
 let usersRepository: ReturnType<typeof UsersMockRepository>;
@@ -33,6 +35,7 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
             userId: user.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -64,6 +67,7 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
             userId: '1',
+            currentUserId: '1',
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -84,9 +88,39 @@ describe('[UT] - Find last thirty days schedule by user id', () => {
 
         const result = await findLastThirtyScheduleByUserIdUseCase.execute({
             userId: user.id.toString(),
+            currentUserId: user.id.toString(),
         });
 
         expect(result.isRight()).toBeTruthy();
         expect(result.value).toHaveLength(0);
+    });
+
+    it('should return error when user is not the admin or the owner', async () => {
+        const user = createFakeUser({ role: 'user' as UserRole });
+        const currentUser = createFakeUser({ role: 'user' as UserRole });
+        const schedule = [
+            createFakeSchedule({
+                userId: user.id.toString(),
+            }),
+        ];
+
+        schedulesRepository.findByUserIdAndLastDays.mockResolvedValue(schedule);
+        usersRepository.findById
+            .mockResolvedValueOnce(user)
+            .mockResolvedValueOnce(currentUser);
+
+        const findLastThirtyScheduleByUserIdUseCase =
+            new FindLastThirtyScheduleByUserIdUseCase(
+                schedulesRepository,
+                usersRepository,
+            );
+
+        const result = await findLastThirtyScheduleByUserIdUseCase.execute({
+            userId: user.id.toString(),
+            currentUserId: currentUser.id.toString(),
+        });
+
+        expect(result.isLeft()).toBeTruthy();
+        expect(result.value).toBeInstanceOf(NotAllowedError);
     });
 });

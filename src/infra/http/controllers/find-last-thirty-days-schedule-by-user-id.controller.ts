@@ -1,3 +1,5 @@
+import { CurrentUser } from '@infra/auth/current-user-decorator';
+import { UserPayload } from '@infra/auth/jwt.strategy';
 import {
     BadRequestException,
     ConflictException,
@@ -5,6 +7,7 @@ import {
     Get,
     Param,
 } from '@nestjs/common';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { FindLastThirtyScheduleByUserIdUseCase } from '@usecase/find-last-thirty-days-schedule-by-user-id/find-last-thirty-days-schedule-by-user-id';
 
@@ -15,9 +18,13 @@ export class FindLasThirtyDaysScheduleByUserIdController {
     ) {}
 
     @Get()
-    async handle(@Param('userid') userId: string) {
+    async handle(
+        @Param('userid') userId: string,
+        @CurrentUser() user: UserPayload,
+    ) {
         const result = await this.findLasThirtyDaysScheduleByUserId.execute({
             userId,
+            currentUserId: user.sub,
         });
 
         if (result.isLeft()) {
@@ -26,6 +33,8 @@ export class FindLasThirtyDaysScheduleByUserIdController {
             switch (error.constructor) {
                 case UserDoesNotExistsError:
                     throw new ConflictException(error.message);
+                case NotAllowedError:
+                    throw new BadRequestException(error.message);
                 default:
                     throw new BadRequestException();
             }

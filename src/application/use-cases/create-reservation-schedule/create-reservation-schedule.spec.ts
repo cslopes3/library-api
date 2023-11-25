@@ -16,6 +16,8 @@ import { createFakeUser } from 'test/factories/fake-user-factory';
 import { createFakeSchedule } from 'test/factories/fake-schedule-factory';
 import { UsersMockRepository } from '@mocks/mock-users-repository';
 import { createFakeReservation } from 'test/factories/fake-reservation-factory';
+import { UserRole } from '@shared/utils/user-role';
+import { NotAllowedError } from '@usecase/@errors/not-allowed-error';
 
 let schedulesRepository: ReturnType<typeof SchedulesMockRepository>;
 let reservationsRepository: ReturnType<typeof ReservationsMockRepository>;
@@ -61,6 +63,7 @@ describe('[UT] - Schedule reservation use case', () => {
                 bookId: item.bookId,
                 name: item.name,
             })),
+            currentUserId: schedule.userId,
         });
 
         expect(result.isRight()).toBeTruthy();
@@ -103,6 +106,7 @@ describe('[UT] - Schedule reservation use case', () => {
                 bookId: item.bookId,
                 name: item.name,
             })),
+            currentUserId: schedule.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -132,6 +136,7 @@ describe('[UT] - Schedule reservation use case', () => {
                 bookId: item.bookId,
                 name: item.name,
             })),
+            currentUserId: schedule.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -165,6 +170,7 @@ describe('[UT] - Schedule reservation use case', () => {
                 bookId: item.bookId,
                 name: item.name,
             })),
+            currentUserId: schedule.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -203,6 +209,7 @@ describe('[UT] - Schedule reservation use case', () => {
                     name: item.name,
                 }),
             ),
+            currentUserId: scheduleWithDeadlineProblem.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -261,6 +268,7 @@ describe('[UT] - Schedule reservation use case', () => {
                 bookId: item.bookId,
                 name: item.name,
             })),
+            currentUserId: schedule.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
@@ -315,9 +323,42 @@ describe('[UT] - Schedule reservation use case', () => {
                 bookId: item.bookId,
                 name: item.name,
             })),
+            currentUserId: schedule.userId,
         });
 
         expect(result.isLeft()).toBeTruthy();
         expect(result.value).toBeInstanceOf(ScheduleLimitOfSameBookError);
+    });
+
+    it('should return error when user is not the admin or the owner', async () => {
+        const user = createFakeUser({ role: 'user' as UserRole });
+        const currentUser = createFakeUser({ role: 'user' as UserRole });
+        const schedule = createFakeSchedule({
+            userId: '1234',
+        });
+
+        usersRepository.findById
+            .mockResolvedValueOnce(user)
+            .mockResolvedValueOnce(currentUser);
+
+        const scheduleReservationUseCase = new CreateReservationScheduleUseCase(
+            schedulesRepository,
+            reservationsRepository,
+            booksRepository,
+            usersRepository,
+        );
+
+        const result = await scheduleReservationUseCase.execute({
+            date: schedule.date,
+            userId: schedule.userId,
+            scheduleItems: schedule.scheduleItems.map((item) => ({
+                bookId: item.bookId,
+                name: item.name,
+            })),
+            currentUserId: currentUser.id.toString(),
+        });
+
+        expect(result.isLeft()).toBeTruthy();
+        expect(result.value).toBeInstanceOf(NotAllowedError);
     });
 });

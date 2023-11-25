@@ -7,12 +7,16 @@ import {
     ConflictException,
     Controller,
     Post,
+    UseGuards,
 } from '@nestjs/common';
 import { UserDoesNotExistsError } from '@usecase/@errors/user-does-not-exists-error';
 import { BookDoesNotExistsError } from '@usecase/@errors/book-does-not-exists-error';
 import { ReserveLimitError } from '@usecase/@errors/reserve-limit-error';
 import { BookWithReturnDateExpiredError } from '@usecase/@errors/book-with-return-date-expired-error';
 import { BookNotAvailableError } from '@usecase/@errors/book-not-available-error';
+import { Role } from '@infra/auth/role';
+import { UserRole } from '@shared/utils/user-role';
+import { RoleGuard } from '@infra/auth/role.guard';
 
 const createReservationBodySchema = z.object({
     userId: z.string(),
@@ -29,6 +33,8 @@ type CreateReservationBodySchema = z.infer<typeof createReservationBodySchema>;
 const bodyValidationPipe = new ZodValidationPipe(createReservationBodySchema);
 
 @Controller('/reservations')
+@Role(UserRole.ADMIN)
+@UseGuards(RoleGuard)
 export class CreateReservationController {
     constructor(private createReservation: CreateReservationUseCase) {}
 
